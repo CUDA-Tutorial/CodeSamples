@@ -7,3 +7,10 @@ Requirements:
 * CMake 3.20
 * CUDA capable GPU with compute capability 5.2 or higher
 * CUDA Toolkit 9.0 or higher
+
+Recommended:
+
+* Nsight Systems
+* Nsight Compute
+* CUDA capable GPU with compute capability 7.0 or higher
+* CUDA Toolkit 11.0 or higher
