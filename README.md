@@ -5,7 +5,7 @@ Here we provide the codebase for samples that accompany the tutorial "CUDA and A
 Requirements:
 
 * Recent MSVC, clang or g++ environment
-* CMake 3.20
+* CMake 3.20 (**Ubuntu** users please update!)
 * CUDA capable GPU with compute capability 5.2 or higher
 * CUDA Toolkit 9.0 or higher
 
