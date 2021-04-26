@@ -9,4 +9,5 @@ project(TutorialSamples LANGUAGES CUDA CXX)
 add_subdirectory(01_HelloGPU)
 add_subdirectory(02_HostDeviceFunctions)
 add_subdirectory(03_GridConfiguration)
+add_subdirectory(05_MemoryBasics)
 
