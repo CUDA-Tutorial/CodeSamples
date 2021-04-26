@@ -1,4 +1,4 @@
-# CodeSamples
+# CUDA Tutorial Code Samples
 
 Here we provide the codebase for samples that accompany the tutorial "CUDA and Applications to Task-based Programming". 
 
