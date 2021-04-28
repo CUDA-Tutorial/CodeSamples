@@ -261,7 +261,8 @@ int main()
      Each entry gives a technique's name, the kernel to call, and
      the number of threads required for each individual technique.
     */
-    std::tuple<const char*, void(*)(const float*, int), unsigned int> reductionTechniques[] = {
+    const std::tuple<const char*, void(*)(const float*, int), unsigned int> reductionTechniques[]
+    {
         std::make_tuple("Atomic Global", reduceAtomicGlobal, N),
         std::make_tuple("Atomic Shared", reduceAtomicShared, N),
         std::make_tuple("Reduce Shared", reduceShared, N),
