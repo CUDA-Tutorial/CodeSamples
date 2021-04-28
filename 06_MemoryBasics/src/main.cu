@@ -11,7 +11,7 @@ __global__ void ReadConstantMemory()
 }
 
 // Definition of a device variable in global memory
-__device__ int dFoo = 42;
+__device__ const int dFoo = 42;
 
 __global__ void ReadGlobalMemory(const int* __restrict dBarPtr)
 {
@@ -34,7 +34,7 @@ int main()
      "CPU : Copied back from GPU-- > 1764"
     */
 
-    int bar = 0xcaffe;
+    const int bar = 0xcaffe;
     /*
      Uniform variables should best be placed in constant
      GPU memory. Can be updated with cudaMemcpyToSymbol.

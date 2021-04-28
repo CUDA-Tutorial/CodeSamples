@@ -19,9 +19,9 @@ __device__ float dResult;
  The most basic reduction kernel uses atomic operations to accumulate
  the individual inputs in a single, device-wide visible variable.
 */
-__global__ void reduceAtomicGlobal(const float* input, int N)
+__global__ void reduceAtomicGlobal(const float* __restrict input, int N)
 {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    const int id = threadIdx.x + blockIdx.x * blockDim.x;
     /* 
     Since all blocks must have the same number of threads,
     we may have to launch more threads than there are 
@@ -38,9 +38,9 @@ __global__ void reduceAtomicGlobal(const float* input, int N)
  block-wide visible memory. This relieves the contention on 
  a single global variable that all threads want access to.
 */
-__global__ void reduceAtomicShared(const float* input, int N)
+__global__ void reduceAtomicShared(const float* __restrict input, int N)
 {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    const int id = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Declare a shared float for each block
     __shared__ float x;
@@ -84,9 +84,9 @@ __global__ void reduceAtomicShared(const float* input, int N)
  exclusive shared variable in each iteration in parallel,
  giving an effective runtime that is closer to O(log N).
 */
-__global__ void reduceShared(const float* input, int N)
+__global__ void reduceShared(const float* __restrict input, int N)
 {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    const int id = threadIdx.x + blockIdx.x * blockDim.x;
 
     /*
     Use a larger shared memory region so that each
@@ -137,9 +137,9 @@ __global__ void reduceShared(const float* input, int N)
  scheduled for execution. Warps will be formed from 
  consecutive threads in groups of 32.
 */
-__global__ void reduceSharedShuffle(const float* input, int N)
+__global__ void reduceSharedShuffle(const float* __restrict input, int N)
 {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    const int id = threadIdx.x + blockIdx.x * blockDim.x;
 
     __shared__ float data[BLOCK_SIZE];
     data[threadIdx.x] = (id < N ? input[id] : 0);
@@ -218,8 +218,8 @@ int main()
     // Expliclity copy the inputs from the CPU to the GPU
     cudaMemcpy(dValsPtr, vals.data(), sizeof(float) * N, cudaMemcpyHostToDevice);
     // Compute the smallest grid to process N entries with a given block size
-    dim3 blockDim = { BLOCK_SIZE, 1, 1 };
-    dim3 gridDim = { (N + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1 };
+    const dim3 blockDim = { BLOCK_SIZE, 1, 1 };
+    const dim3 gridDim = { (N + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1 };
 
     // Set up a collection of techniques to evaluate for performance
     std::pair<const char*, void(*)(const float*, int)> reductionTechniques[] = {
@@ -238,7 +238,7 @@ int main()
 
         // Synchronize to ensure CPU only records time after warmup is done
         cudaDeviceSynchronize();
-        auto before = std::chrono::system_clock::now();
+        const auto before = std::chrono::system_clock::now();
 
         float result = 0.0f;
         // Run several iterations to get an average measurement
@@ -250,7 +250,7 @@ int main()
 
         // cudaMemcpyFromSymbol implicitly synchronizes CPU and GPU
         cudaMemcpyFromSymbol(&result, dResult, sizeof(float));
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count();
         std::cout << elapsed / TIMING_ITERATIONS << "ms \t" << result << "\t" << name << std::endl;
     }
 

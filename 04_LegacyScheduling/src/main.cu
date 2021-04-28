@@ -34,7 +34,7 @@ int main()
      effort to optimize code. Results may vary.
      */
 
-    int N = 128;
+    const int N = 128;
     run2NestedBranchesForNSteps(N);
     return 0;
 }
