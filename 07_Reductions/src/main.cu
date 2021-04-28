@@ -6,6 +6,7 @@
 #include <tuple>
 #include <utility>
 #include <numeric>
+#include <iomanip>
 
 #define BLOCK_SIZE 256
 #define WARMUP_ITERATIONS 10
@@ -130,7 +131,7 @@ __global__ void reduceShared(const float* __restrict input, int N)
 }
 
 /*
- Final improvement: using warp-level primitives to 
+ Warp-level improvement: using warp-level primitives to 
  accelerate the final steps of the reduction. Warps
  have a fast lane for communication. They are free 
  to exchange values in registers when they are being
@@ -182,6 +183,43 @@ __global__ void reduceSharedShuffle(const float* __restrict input, int N)
         atomicAdd(&dResult, x);
 }
 
+/*
+ Final improvement: half of our threads actually idle after 
+ they have loaded data from global memory to shared! Better
+ to have threads fetch two values at the start and then let
+ them all do at least some meaningful work. This means that
+ compared to all other methods, only half the number of 
+ threads must be launched in the grid!
+*/
+__global__ void reduceFinal(const float* __restrict input, int N)
+{
+    const int id = threadIdx.x + blockIdx.x * blockDim.x;
+
+    __shared__ float data[BLOCK_SIZE];
+    // Already combine two values upon load from global memory
+    data[threadIdx.x] = (id < N ? (input[id] + input[id+N/2]) : 0);
+
+    for (int s = blockDim.x / 2; s > 16; s /= 2)
+    {
+        __syncthreads();
+        if (threadIdx.x < s)
+            data[threadIdx.x] += data[threadIdx.x + s];
+    }
+
+    float x = data[threadIdx.x];
+    if (threadIdx.x < 32)
+    {
+        x += __shfl_sync(0xFFFFFFFF, x, threadIdx.x + 16);
+        x += __shfl_sync(0xFFFFFFFF, x, threadIdx.x + 8);
+        x += __shfl_sync(0xFFFFFFFF, x, threadIdx.x + 4);
+        x += __shfl_sync(0xFFFFFFFF, x, threadIdx.x + 2);
+        x += __shfl_sync(0xFFFFFFFF, x, 1);
+    }
+
+    if (threadIdx.x == 0)
+        atomicAdd(&dResult, x);
+}
+
 int main()
 {
     std::cout << "==== Sample 07 ====\n";
@@ -217,22 +255,28 @@ int main()
     cudaMalloc((void**)&dValsPtr, sizeof(float) * N);
     // Expliclity copy the inputs from the CPU to the GPU
     cudaMemcpy(dValsPtr, vals.data(), sizeof(float) * N, cudaMemcpyHostToDevice);
-    // Compute the smallest grid to process N entries with a given block size
-    const dim3 blockDim = { BLOCK_SIZE, 1, 1 };
-    const dim3 gridDim = { (N + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1 };
 
-    // Set up a collection of techniques to evaluate for performance
-    std::pair<const char*, void(*)(const float*, int)> reductionTechniques[] = {
-        std::make_pair("Atomic Global", reduceAtomicGlobal),
-        std::make_pair("Atomic Shared", reduceAtomicShared),
-        std::make_pair("Reduce Shared", reduceShared),
-        std::make_pair("Reduce Shared + Shuffle", reduceSharedShuffle)
+    /*
+     Set up a collection of reductions to evaluate for performance. 
+     Each entry gives a technique's name, the kernel to call, and
+     the number of threads required for each individual technique.
+    */
+    std::tuple<const char*, void(*)(const float*, int), unsigned int> reductionTechniques[] = {
+        std::make_tuple("Atomic Global", reduceAtomicGlobal, N),
+        std::make_tuple("Atomic Shared", reduceAtomicShared, N),
+        std::make_tuple("Reduce Shared", reduceShared, N),
+        std::make_tuple("Reduce Shuffle", reduceSharedShuffle, N),
+        std::make_tuple("Reduce Final", reduceFinal, N/2+1)
     };
 
-    // Evaluate each technique
-    for (const auto& [name, func] : reductionTechniques)
+    // Evaluate each technique separately
+    for (const auto& [name, func, numThreads] : reductionTechniques)
     {
-        // Run several iterations for GPU warump
+        // Compute the smallest grid to start required threads with a given block size
+        const dim3 blockDim = { BLOCK_SIZE, 1, 1 };
+        const dim3 gridDim = { (numThreads + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1 };
+
+        // Run several reductions for GPU to warm up
         for (int i = 0; i < WARMUP_ITERATIONS; i++)
             func<<<gridDim, blockDim>>>(dValsPtr, N);
 
@@ -244,14 +288,18 @@ int main()
         // Run several iterations to get an average measurement
         for (int i = 0; i < TIMING_ITERATIONS; i++)
         {
+            // Reset acummulated result to 0 in each run
             cudaMemcpyToSymbol(dResult, &result, sizeof(float));
             func<<<gridDim, blockDim>>>(dValsPtr, N);
         }
 
-        // cudaMemcpyFromSymbol implicitly synchronizes CPU and GPU
+        // cudaMemcpyFromSymbol will implicitly synchronize CPU and GPU
         cudaMemcpyFromSymbol(&result, dResult, sizeof(float));
-        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count();
-        std::cout << elapsed / TIMING_ITERATIONS << "ms \t" << result << "\t" << name << std::endl;
+
+        // Can measure time without an extra synchronization
+        const auto after = std::chrono::system_clock::now();
+        const auto elapsed = 1000.f * std::chrono::duration_cast<std::chrono::duration<float>>(after - before).count();
+        std::cout << std::setw(20) << name << "\t" << elapsed / TIMING_ITERATIONS << "ms \t" << result << std::endl;
     }
 
     // Free the allocated memory for input
