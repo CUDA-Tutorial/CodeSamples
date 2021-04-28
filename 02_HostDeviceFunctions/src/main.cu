@@ -26,9 +26,11 @@ __global__ void RunGPU(float x)
     printf("%f\n", SquareAnywhere(x));
 }
 
-// Call host and portable functions from a kernel
-// Note that, by default, if function has no architecture
-// specified, it is assumed to be __host__ by NVCC.
+/*
+ Call host and portable functions from a kernel
+ Note that, by default, if function has no architecture
+ specified, it is assumed to be __host__ by NVCC.
+*/
 void RunCPU(float x)
 {
     HostOnly();
@@ -37,6 +39,16 @@ void RunCPU(float x)
 
 int main()
 {
+    std::cout << "==== Sample 02 ====\n";
+    std::cout << "==== Host / Device Functions ====\n" << std::endl;
+    /*
+     Expected output:
+     "This function may only be called from the host"
+     1764
+     "This function may only be called from the device"
+     1764.00
+    */
+
     RunCPU(42);
     RunGPU<<<1, 1>>>(42);
     cudaDeviceSynchronize();
