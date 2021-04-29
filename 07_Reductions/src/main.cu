@@ -8,10 +8,10 @@
 #include <numeric>
 #include <iomanip>
 
-#define BLOCK_SIZE 256
-#define WARMUP_ITERATIONS 10
-#define TIMING_ITERATIONS 20
-#define NUM_ITEMS 100'000'000
+constexpr unsigned int BLOCK_SIZE = 256;
+constexpr unsigned int WARMUP_ITERATIONS = 10;
+constexpr unsigned int TIMING_ITERATIONS = 20;
+constexpr unsigned int NUM_ITEMS = 100'000'000;
 
 // Declare a GPU-visible floating point variable in global memory.
 __device__ float dResult;
@@ -138,7 +138,7 @@ __global__ void reduceShared(const float* __restrict input, int N)
  scheduled for execution. Warps will be formed from 
  consecutive threads in groups of 32.
 */
-__global__ void reduceSharedShuffle(const float* __restrict input, int N)
+__global__ void reduceShuffle(const float* __restrict input, int N)
 {
     const int id = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -263,11 +263,11 @@ int main()
     */
     const std::tuple<const char*, void(*)(const float*, int), unsigned int> reductionTechniques[]
     {
-        std::make_tuple("Atomic Global", reduceAtomicGlobal, N),
-        std::make_tuple("Atomic Shared", reduceAtomicShared, N),
-        std::make_tuple("Reduce Shared", reduceShared, N),
-        std::make_tuple("Reduce Shuffle", reduceSharedShuffle, N),
-        std::make_tuple("Reduce Final", reduceFinal, N/2+1)
+        {"Atomic Global", reduceAtomicGlobal, N},
+        {"Atomic Shared", reduceAtomicShared, N},
+        {"Reduce Shared", reduceShared, N},
+        {"Reduce Shuffle", reduceShuffle, N},
+        {"Reduce Final", reduceFinal, N / 2 + 1}
     };
 
     // Evaluate each technique separately
