@@ -9,9 +9,6 @@
 #include <iomanip>
 
 constexpr unsigned int BLOCK_SIZE = 256;
-constexpr unsigned int WARMUP_ITERATIONS = 10;
-constexpr unsigned int TIMING_ITERATIONS = 20;
-constexpr unsigned int NUM_ITEMS = 100'000'000;
 
 // Declare a GPU-visible floating point variable in global memory.
 __device__ float dResult;
@@ -222,8 +219,7 @@ __global__ void reduceFinal(const float* __restrict input, int N)
 
 int main()
 {
-    std::cout << "==== Sample 07 ====\n";
-    std::cout << "==== Reductions ====\n" << std::endl;
+    std::cout << "==== Sample 07 - Reductions====\n" << std::endl;
     /*
      Expected output: Accumulated results from CPU and GPU that 
      approach 42 * NUM_ITEMS (can vary greatly due to floating point 
@@ -233,8 +229,11 @@ int main()
      GPU versions (measured runtime in ms) should generally decrease.
     */
 
-    const unsigned int N = NUM_ITEMS;
-    const float target = 42.f;
+    constexpr unsigned int WARMUP_ITERATIONS = 10;
+    constexpr unsigned int TIMING_ITERATIONS = 20;
+    constexpr unsigned int N = 100'000'000;
+
+    constexpr float target = 42.f;
 
     std::cout << "Producing random inputs...\n" << std::endl;
     // Generate a few random inputs to accumulate

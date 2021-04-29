@@ -25,8 +25,7 @@ __global__ void WriteGlobalMemory(int* __restrict dOutPtr)
 
 int main()
 {
-    std::cout << "==== Sample 06 ====\n";
-    std::cout << "==== Memory Basics ====\n" << std::endl;
+    std::cout << "==== Sample 06 - Memory Basics ====\n" << std::endl;
     /*
      Expected output:
      "GPU: Reading constant memory-- > caffe"

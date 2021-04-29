@@ -11,8 +11,7 @@ __global__ void PrintIDs()
 
 int main()
 {
-    std::cout << "==== Sample 03 ====\n";
-    std::cout << "==== Grid Configuration ====\n" << std::endl;
+    std::cout << "==== Sample 03 - Grid Configurations ====\n" << std::endl;
     /*
     Expected output:
     Block IDs and Thread IDs for two separate grids

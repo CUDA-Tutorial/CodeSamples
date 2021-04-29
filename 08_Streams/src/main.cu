@@ -14,8 +14,7 @@ __global__ void busy()
 
 int main()
 {
-	std::cout << "==== Sample 08 ====\n";
-	std::cout << "==== Streams ====\n" << std::endl;
+	std::cout << "==== Sample 08 - Streams ====\n" << std::endl;
 	/*
 	 Expected output: "I'm awake!\n" x 3 x KERNEL_CALLS
 

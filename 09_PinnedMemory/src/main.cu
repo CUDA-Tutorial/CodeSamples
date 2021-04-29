@@ -14,8 +14,7 @@ __global__ void PerformComplexTask(float input, float* __restrict result)
 
 int main()
 {
-	std::cout << "==== Sample 09 ====\n";
-	std::cout << "==== Pinned Memory ====\n" << std::endl;
+	std::cout << "==== Sample 09 - Pinned Memory ====\n" << std::endl;
 	/*
 	Pinned memory becomes relevant once we start using streams
 	and memory transfer enters the mix. The default memcpy operation
@@ -72,10 +71,10 @@ int main()
 
 		for (auto cpy : { CPYTYPE::MEMCPY, CPYTYPE::MEMCPYASYNC })
 		{
-			std::cout << "\nPerforming tasks with " << (mem == MEMTYPE::PINNED ? "pinned memory" : "regular memory");
+			std::cout << "Performing tasks with " << (mem == MEMTYPE::PINNED ? "pinned memory" : "regular memory");
 			std::cout << " and " << (cpy == CPYTYPE::MEMCPYASYNC ? "asynchronous" : "regular") << " copy" << std::endl;
 
-			// Synchronize to get adequate time measurements
+			// Synchronize to get adequate CPU time measurements
 			cudaDeviceSynchronize();
 			auto before = std::chrono::system_clock::now();
 
@@ -90,14 +89,14 @@ int main()
 					cudaMemcpy(&dst[i], dResultsPtr+i, sizeof(float), cudaMemcpyDeviceToHost);
 			}
 
-			// Synchronize to get adequate time measurements
+			// Synchronize to get adequate CPU time measurements
 			cudaDeviceSynchronize();
 			auto after = std::chrono::system_clock::now();
 
 			// Print computed results and total CPU-side runtime
 			for (int i = 0; i < TASKS; i++)
 				std::cout << i+1 << " squared = " << results[i] << std::endl;
-			std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(after - before).count() << "s\n";
+			std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(after-before).count() << "s\n\n";
 		}
 	}
 

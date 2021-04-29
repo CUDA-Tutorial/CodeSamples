@@ -4,8 +4,7 @@
 
 int main()
 {
-    std::cout << "==== Sample 04 ====\n";
-    std::cout << "==== Legacy Thread Scheduling ====\n" << std::endl;
+    std::cout << "==== Sample 04 - Legacy Thread Scheduling ====\n" << std::endl;
     /*
      This code will launch a particular test kernel.
      It will launch 4 threads in total.

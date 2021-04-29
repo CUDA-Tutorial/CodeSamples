@@ -9,8 +9,7 @@ __global__ void HelloGPU()
 
 int main()
 {
-	std::cout << "==== Sample 01 ====\n";
-	std::cout << "==== Hello GPU ====\n" << std::endl;
+	std::cout << "==== Sample 01 - Hello GPU ====\n" << std::endl;
 	// Expected output: 12x "Hello from the GPU!\n"
 
 	// Launch a kernel with 1 block that has 12 threads

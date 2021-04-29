@@ -39,8 +39,7 @@ void RunCPU(float x)
 
 int main()
 {
-    std::cout << "==== Sample 02 ====\n";
-    std::cout << "==== Host / Device Functions ====\n" << std::endl;
+    std::cout << "==== Sample 02 - Host / Device Functions ====\n" << std::endl;
     /*
      Expected output:
      "This function may only be called from the host"
