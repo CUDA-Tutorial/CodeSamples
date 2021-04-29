@@ -241,7 +241,7 @@ int main()
     std::default_random_engine eng(0xcaffe);
     std::normal_distribution<float> dist(target);
     std::vector<float> vals(N);
-    std::for_each(vals.begin(), vals.end(), [&](float& f) { f = dist(eng); });
+    std::for_each(vals.begin(), vals.end(), [&dist, &eng](float& f) { f = dist(eng); });
 
     std::cout << "==== CPU Reduction ====\n" << std::endl;
     // A reference value is computed by sequential reduction

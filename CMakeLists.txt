@@ -14,4 +14,5 @@ add_subdirectory(05_IndependentThreadScheduling)
 add_subdirectory(06_MemoryBasics)
 add_subdirectory(07_Reductions)
 add_subdirectory(08_Streams)
+add_subdirectory(09_PinnedMemory)
 

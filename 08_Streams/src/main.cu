@@ -12,7 +12,6 @@ __global__ void busy()
 	printf("I'm awake!\n");
 }
 
-
 int main()
 {
 	std::cout << "==== Sample 08 ====\n";
