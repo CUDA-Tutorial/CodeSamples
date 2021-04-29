@@ -13,4 +13,5 @@ add_subdirectory(04_LegacyScheduling)
 add_subdirectory(05_IndependentThreadScheduling)
 add_subdirectory(06_MemoryBasics)
 add_subdirectory(07_Reductions)
+add_subdirectory(08_Streams)
 

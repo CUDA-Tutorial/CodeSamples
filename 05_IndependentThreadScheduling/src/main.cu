@@ -36,7 +36,7 @@ int main()
      runtime. Results may vary.
      */
 
-    const int N = 128;
+    constexpr int N = 128;
     run2NestedBranchesForNSteps(N);
     return 0;
 }
