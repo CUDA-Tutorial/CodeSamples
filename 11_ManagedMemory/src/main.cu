@@ -43,7 +43,7 @@ int main()
 
 	// We may assign values to managed variables on the CPU
 	mFoo = VALUE;
-	// Managed variables can be used without transferring
+	// Managed variables can be used without explicit transfer
 	PrintFoo<<<1,1>>>();
 	// Wait for printf output
 	cudaDeviceSynchronize();
@@ -57,7 +57,7 @@ int main()
 	/*
 	If we know ahead of time where managed memory will be used
 	and performance is essential, we can prefetch it to the
-	required location.
+	required location. This basically replaces memcpy.
 	*/
 	int device;
 	cudaGetDevice(&device);
