@@ -90,7 +90,7 @@ int main()
 
 			// Synchronize to get adequate CPU time measurements
 			cudaDeviceSynchronize();
-			auto before = std::chrono::system_clock::now();
+			const auto before = std::chrono::system_clock::now();
 
 			for (int i = 0; i < TASKS; i++)
 			{
@@ -116,7 +116,7 @@ int main()
 					std::cout << "Finished task " << i << ", produced output: " << results[i] << std::endl;
 			}
 
-			auto after = std::chrono::system_clock::now();
+			const auto after = std::chrono::system_clock::now();
 			std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(after-before).count() << "s\n\n";
 		}
 	}

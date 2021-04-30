@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 
 // A simple kernel function to keep threads busy for a while
 __global__ void busy()
@@ -48,15 +50,15 @@ int main()
 	// Destroy all streams (implicitly waits until each has finished)
 	for (cudaStream_t& s : streams)
 		cudaStreamDestroy(s);
-
 	cudaDeviceSynchronize();
 
 	/*
 	If we don't specify a stream, then the kernel is launched into the default 
-	stream. Usually, only a single default stream is defined per application,
-	meaning that if you don't specify streams, you will not be able to benefit 
-	from kernels running concurrently. Hence, any elaborate CUDA application 
-	should be using streams. 
+	stream. Also, many operations like cudaDeviceSynchronize and 
+	cudaStreamSynchronize are submitted to the default stream. Usually, only a 
+	single default stream is defined per application, meaning that if you don't 
+	specify streams, you will not be able to benefit from kernels running 
+	concurrently. Hence, any elaborate CUDA application should be using streams. 
 	
 	However, if the task can be cleanly separated into CPU threads, there is another 
 	option: using per-thread default streams. Each thread will use its own default
@@ -66,17 +68,35 @@ int main()
 	This way, CPU threads will use separate default streams if none are specified.
 	*/
 	std::cout << "\nRunning threads with different default streams" << std::endl;
+
+	// Create mutex, condition variable and counter for communication
+	std::mutex mutex;
+	std::condition_variable cv;
+	unsigned int kernelsLaunched = 0;
 	// Allocate sufficient number of threads
 	std::thread threads[KERNEL_CALLS];
+	// Create a separate thread for each kernel call (task)
 	for (std::thread& t : threads)
 	{
-		// Create a separate thread for each kernel call (task)
-		t = std::thread([] { busy<<<1, 1, 0, cudaStreamPerThread>>>(); });
+		t = std::thread([&mutex, &cv, &kernelsLaunched] {
+			// Launch kernel to thread's default stream
+			busy<<<1, 1, 0, cudaStreamPerThread>>>();
+			/*
+			 Make sure all kernels are submitted before synchronizing,
+			 because cudaStreamSynchronize goes into the default 0 stream:
+			 busy<1> -> sync<0>(1) -> busy<2> -> sync<0>(2)... serializes.
+			 busy<1> -> busy<2> -> sync<0>(1) -> sync<0>(2)... parallelizes.
+			*/
+			std::unique_lock<std::mutex> lock(mutex);
+			++kernelsLaunched;
+			cv.wait(lock, [&kernelsLaunched] { return kernelsLaunched == KERNEL_CALLS; });
+			cv.notify_all();
+			// Synchronize to wait for printf output
+			cudaStreamSynchronize(cudaStreamPerThread);
+		});
 	}
 	// Wait for all threads to finish launching their kernels in individual streams
 	std::for_each(threads, threads + KERNEL_CALLS, [](std::thread& t) {t.join(); });
-	// Wait for all kernels to end
-	cudaDeviceSynchronize();
 
 	/*
 	By default, custom created streams will implicitly synchronize with the 
@@ -100,7 +120,9 @@ int main()
 	testAB("regular", customRegular);
 	testAB("non-blocking", customNonblocking);
 
+	// Clean up generated streams
 	cudaStreamDestroy(customRegular);
 	cudaStreamDestroy(customNonblocking);
+
 	return 0;
 }

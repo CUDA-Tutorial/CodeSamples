@@ -8,7 +8,7 @@ __device__ int dVal = 42;
 __device__ int dOut;
 
 // Very simple kernel that updates a variable
-__global__ void CopyVal(int* val)
+__global__ void CopyVal(const int* val)
 {
 	// Simulating a little work
 	const int start = clock();
