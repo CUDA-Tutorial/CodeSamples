@@ -20,7 +20,7 @@ __global__ void CopyVal(int* val)
 
 void checkForErrors()
 {
-	// Catch errors that can be detected without synchronization
+	// Catch errors that can be detected without synchronization, clear them
 	cudaError_t err;
 	err = cudaGetLastError();
 	if (err == cudaSuccess)
@@ -28,7 +28,7 @@ void checkForErrors()
 	else
 		std::cout << "cudaGetLastError() before sync found error: " << cudaGetErrorName(err) << ", CLEARS ERROR" << std::endl;
 
-	// Catch errors that require explicit synchronization
+	// Catch errors that require explicit synchronization, do not clear them
 	err = cudaDeviceSynchronize();
 	if (err == cudaSuccess)
 		std::cout << "cudaDeviceSynchronize() found no error" << std::endl;
@@ -57,17 +57,17 @@ int main()
 	 Many functions in the CUDA API return error codes that indicate
 	 that something has gone wrong. However, this error is not 
 	 necessarily caused by the function that returns it. Kernels and
-	 asynchronous memcopies e.g. are launched immediately and may only
+	 asynchronous memcopies, e.g., return immediately and may only
 	 encounter errors after the return value is observed on the CPU. 
 	 Such errors can be detected at some later point, for instance by
 	 a synchronous function like cudaMemcpy or cudaDeviceSynchronize,
 	 or by cudaGetLastError after a synchronization. To ensure that 
-	 every CUDA call worked without error, we would have to sacrifice 
-	 concurrency and asynchronicity. Hence, error checking is, in practice,
-	 rather opportunistic and happens e.g. at runtime when an algorithm
-	 is synchronized anyway or when we debug misbehaving code. The error
-	 checking in this code is thus not practical and only serves to 
-	 illustrate how different mechanisms detect and affect previous errors. 
+	 every single CUDA call worked without error, we would have to 
+	 sacrifice concurrency and asynchronicity. Hence, error checking 
+	 is, in practice, rather opportunistic and happens e.g. at runtime 
+	 when an algorithm is synchronized anyway or when we debug misbehaving 
+	 code. The error checking in this code is thus not practical and only 
+	 serves to illustrate how different mechanisms detect previous errors. 
 
 	 Expected output:
 
@@ -114,7 +114,7 @@ int main()
 	PRINT_RUN_CHECK((CopyVal<<<1, (1<<16)>>>(validDAddress)));
 
 	/*
-	Launching a kernel with invalid address - error occurs after launch
+	Launching a kernel with invalid address - error occurs after launch.
 	cudaGetLastError() alone may miss this without synchronization.
 	*/
 	PRINT_RUN_CHECK((CopyVal<<<1, 1>>>(nullptr)));

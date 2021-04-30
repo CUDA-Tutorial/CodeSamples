@@ -44,18 +44,18 @@ int main()
 		cudaStreamDestroy(s);
 
 	/*
-	If we don't specify a stream, then the kernel is launched into the
-	default stream. Usually, the default stream is defined per application,
-	meaning that if you don't use streams, you will not be able to benefit from
-	kernels running concurrently. Hence, any elaborate CUDA application should 
-	be using streams. 
+	If we don't specify a stream, then the kernel is launched into the default 
+	stream. Usually, only a single default stream is defined per application,
+	meaning that if you don't specify streams, you will not be able to benefit 
+	from kernels running concurrently. Hence, any elaborate CUDA application 
+	should be using streams. 
 	
-	However, if the task can be cleanly separated into threads, there is another 
+	However, if the task can be cleanly separated into CPU threads, there is another 
 	option: using per-thread default streams. Each thread will use its own default
 	stream if we pass the built-in value cudaStreamPerThread as the stream to use.
-	Alternatively, you may set the compiler option "--default-stream per-thread". 
-	This way, each created CPU thread receives its own, separate default stream.
 	Kernels can then run concurrently on the GPU by creating multiple CPU threads.
+	Alternatively, you may set the compiler option "--default-stream per-thread". 
+	This way, CPU threads will use separate default streams if none are specified.
 	*/
 	std::thread threads[KERNEL_CALLS];
 	for (std::thread& t : threads)
