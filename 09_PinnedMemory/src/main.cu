@@ -3,12 +3,13 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <thread>
 
 // Simulate a complex task, but actually only compute a square
 __global__ void PerformComplexTask(float input, float* __restrict result)
 {
 	const int start = clock();
-	while ((clock() - start) < 1'000'000'000);
+	while ((clock() - start) < 100'000'000);
 	*result = input * input;
 }
 
@@ -29,9 +30,10 @@ int main()
 	Ideally, we would like the memory transfers to overlap with kernels
 	that run in different streams. But if we use cudaMemcpy, the kernel 
 	calls will execute sequentially, because each cudaMemcpy implicitly 
-	synchronizes with the CPU. However, there is a different memory 
-	transfer function of the name cudaMemcpyAsync, which also takes an 
-	additional stream parameter in which to run. However, using this 
+	synchronizes the default stream with the CPU, and all basic streams 
+	are synchronized with the default stream. However, there is a different 
+	memory transfer function of the name cudaMemcpyAsync, which also takes 
+	an additional stream parameter in which to run. However, using this 
 	function alone is not enough to overlap memory transfer and kernels.
 	To perform asynchronous memcpy between the device and the host, CUDA 
 	must be sure that the host memory is available in main memory. We 
@@ -42,7 +44,12 @@ int main()
 
 	Expected output: slow performance for all combinations that are not
 	pinned memory and asynchronous copy, due to implicit synchronization
-	prevening concurrent execution of kernels.
+	preventing concurrent execution of kernels.
+
+	You may also try to make the streams non-blocking! In this case, you
+	can expect wrong results for cudaMemcpy: the default stream won't
+	wait for the custom streams running the kernels to finish before it
+	starts copying.
 	*/
 
 	constexpr unsigned int TASKS = 4;
@@ -51,10 +58,14 @@ int main()
 	float* dResultsPtr;
 	cudaMalloc((void**)&dResultsPtr, sizeof(float) * TASKS);
 
-	// Generate necessary streams
+	// Generate necessary streams and events
 	cudaStream_t streams[TASKS];
-	for (cudaStream_t& s : streams)
-		cudaStreamCreate(&s);
+	cudaEvent_t events[TASKS];
+	for (int i = 0; i < TASKS; i++)
+	{
+		cudaStreamCreate(&streams[i]);
+		cudaEventCreate(&events[i]);
+	}
 
 	// Two CPU-side memory ranges: one regular and one pinned
 	float results[TASKS], * results_pinned;
@@ -65,14 +76,17 @@ int main()
 	// We run the tasks with regular/pinned memory
 	enum class MEMTYPE { REGULAR, PINNED};
 
-	for (auto mem : { MEMTYPE::REGULAR, MEMTYPE::PINNED })
+	for (auto cpy : { CPYTYPE::MEMCPY, CPYTYPE::MEMCPYASYNC })
 	{
-		float* dst = (mem == MEMTYPE::PINNED ? results_pinned : results);
-
-		for (auto cpy : { CPYTYPE::MEMCPY, CPYTYPE::MEMCPYASYNC })
+		for (auto mem : { MEMTYPE::REGULAR, MEMTYPE::PINNED })
 		{
+			float* dst = (mem == MEMTYPE::PINNED ? results_pinned : results);
+
 			std::cout << "Performing tasks with " << (mem == MEMTYPE::PINNED ? "pinned memory" : "regular memory");
 			std::cout << " and " << (cpy == CPYTYPE::MEMCPYASYNC ? "asynchronous" : "regular") << " copy" << std::endl;
+
+			// Reset GPU result
+			cudaMemset(dResultsPtr, 0, sizeof(float) * TASKS);
 
 			// Synchronize to get adequate CPU time measurements
 			cudaDeviceSynchronize();
@@ -86,16 +100,23 @@ int main()
 				if (cpy == CPYTYPE::MEMCPYASYNC)
 					cudaMemcpyAsync(&dst[i], dResultsPtr+i, sizeof(float), cudaMemcpyDeviceToHost, streams[i]);
 				else
-					cudaMemcpy(&dst[i], dResultsPtr+i, sizeof(float), cudaMemcpyDeviceToHost);
+					cudaMemcpy(&dst[i], dResultsPtr + i, sizeof(float), cudaMemcpyDeviceToHost);
 			}
 
-			// Synchronize to get adequate CPU time measurements
-			cudaDeviceSynchronize();
-			auto after = std::chrono::system_clock::now();
-
-			// Print computed results and total CPU-side runtime
+			// Wait for results being copied back
 			for (int i = 0; i < TASKS; i++)
-				std::cout << i+1 << " squared = " << results[i] << std::endl;
+			{
+				// Wait for the current stream
+				cudaStreamSynchronize(streams[i]);
+
+				// Evaluate result and print
+				if (results[i] != (i + 1) * (i + 1))
+					std::cout << "Task failed or CPU received wrong value!" << std::endl;
+				else
+					std::cout << "Finished task " << i << ", produced output: " << results[i] << std::endl;
+			}
+
+			auto after = std::chrono::system_clock::now();
 			std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(after-before).count() << "s\n\n";
 		}
 	}
