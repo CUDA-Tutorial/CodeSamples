@@ -69,7 +69,7 @@ int main()
 	*/
 	std::cout << "\nRunning threads with different default streams" << std::endl;
 
-	// Create mutex, condition variable and counter for communication
+	// Create mutex, condition variable and kernel counter for communication
 	std::mutex mutex;
 	std::condition_variable cv;
 	unsigned int kernelsLaunched = 0;
