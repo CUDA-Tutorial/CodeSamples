@@ -18,7 +18,7 @@ constexpr unsigned int KERNEL_CALLS = 2;
 
 int main()
 {
-	std::cout << "==== Sample 08 - Streams ====\n" << std::endl;
+	std::cout << "==== Sample 10 - Streams ====\n" << std::endl;
 	/*
 	 Expected output: "I'm awake!\n" x 4 x KERNEL_CALLS + 4
 

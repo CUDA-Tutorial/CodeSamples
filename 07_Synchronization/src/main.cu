@@ -23,13 +23,9 @@ __global__ void ApproximatePi(bool synchronized)
     if (threadIdx.x == 0)
     {
         // Use iterative Gregory–Leibniz series
-        float pi = 0.f;
-        float m = -1.f;
-        for (int n = 0; n < 100'000; n++)
-        {
-            m *= -1.f;
+        float pi = 0.f, m = 1.f;
+        for (int n = 0; n < 100'000; n++, m*= -1.f)
             pi += 4.f * (m / (2 * n + 1)); 
-        }
         // Store computed approximation
         sPi = pi;
     }

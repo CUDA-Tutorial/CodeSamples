@@ -20,7 +20,7 @@ __global__ void PrintBar(const int* mBarPtr, unsigned int numEntries)
 
 int main()
 {
-	std::cout << "==== Sample 11 - Managed Memory ====\n" << std::endl;
+	std::cout << "==== Sample 15 - Managed Memory ====\n" << std::endl;
 
 	/*
 	Managed memory reduces code complexity by decoupling physical

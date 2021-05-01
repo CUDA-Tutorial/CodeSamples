@@ -15,7 +15,7 @@ __global__ void PerformComplexTask(float input, float* __restrict result)
 
 int main()
 {
-	std::cout << "==== Sample 09 - Pinned Memory ====\n" << std::endl;
+	std::cout << "==== Sample 11 - Pinned Memory ====\n" << std::endl;
 	/*
 	Pinned memory becomes relevant once we start using streams
 	and memory transfer enters the mix. The default memcpy operation

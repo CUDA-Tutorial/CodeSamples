@@ -82,7 +82,7 @@ int main()
     cudaEventDestroy(end);
 
     /*
-    Signalling across streams:
+    Dependencies across streams:
 
     Events may also be used to introduce dependencies
     across streams. One stream may compute an important

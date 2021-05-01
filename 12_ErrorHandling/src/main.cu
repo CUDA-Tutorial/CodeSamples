@@ -52,7 +52,7 @@ checkForErrors();
 
 int main()
 {
-	std::cout << "==== Sample 10 - Error Handling ====\n" << std::endl;
+	std::cout << "==== Sample 12 - Error Handling ====\n" << std::endl;
 	/*
 	 Many functions in the CUDA API return error codes that indicate
 	 that something has gone wrong. However, this error is not 
