@@ -7,8 +7,7 @@
 #include <utility>
 #include <numeric>
 #include <iomanip>
-
-constexpr unsigned int BLOCK_SIZE = 256;
+#include "../../shared/include/generate_random.h"
 
 // Declare a GPU-visible floating point variable in global memory.
 __device__ float dResult;
@@ -82,6 +81,7 @@ __global__ void reduceAtomicShared(const float* __restrict input, int N)
  exclusive shared variable in each iteration in parallel,
  giving an effective runtime that is closer to O(log N).
 */
+template <unsigned int BLOCK_SIZE>
 __global__ void reduceShared(const float* __restrict input, int N)
 {
     const int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -135,6 +135,7 @@ __global__ void reduceShared(const float* __restrict input, int N)
  scheduled for execution. Warps will be formed from 
  consecutive threads in groups of 32.
 */
+template <unsigned int BLOCK_SIZE>
 __global__ void reduceShuffle(const float* __restrict input, int N)
 {
     const int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -188,6 +189,7 @@ __global__ void reduceShuffle(const float* __restrict input, int N)
  compared to all other methods, only half the number of 
  threads must be launched in the grid!
 */
+template <unsigned int BLOCK_SIZE>
 __global__ void reduceFinal(const float* __restrict input, int N)
 {
     const int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -229,32 +231,22 @@ int main()
      GPU versions (measured runtime in ms) should generally decrease.
     */
 
+    constexpr unsigned int BLOCK_SIZE = 256;
     constexpr unsigned int WARMUP_ITERATIONS = 10;
     constexpr unsigned int TIMING_ITERATIONS = 20;
     constexpr unsigned int N = 100'000'000;
 
-    constexpr float target = 42.f;
-
     std::cout << "Producing random inputs...\n" << std::endl;
-    // Generate a few random inputs to accumulate
-    std::default_random_engine eng(0xcaffe);
-    std::normal_distribution<float> dist(target);
-    std::vector<float> vals(N);
-    std::for_each(vals.begin(), vals.end(), [&dist, &eng](float& f) { f = dist(eng); });
+    // Generate some random numbers to reduce
+    std::vector<float> vals;
+    float* dValsPtr;
+    prepareRandomNumbersCPUGPU(N, vals, &dValsPtr);
 
     std::cout << "==== CPU Reduction ====\n" << std::endl;
     // A reference value is computed by sequential reduction
-    std::cout << "Reference value: " << std::accumulate(vals.cbegin(), vals.cend(), 0.0f) << std::endl;
-    // Print expected value, because reference may be off due to floating point (im-)precision
-    std::cout << "\nExpected value: " << target * N << "\n" << std::endl;
+    std::cout << "Computed CPU value: " << std::accumulate(vals.cbegin(), vals.cend(), 0.0f) << std::endl;
 
     std::cout << "==== GPU Reductions ====\n" << std::endl;
-    // Allocate some global GPU memory to write the inputs to
-    float* dValsPtr;
-    cudaMalloc((void**)&dValsPtr, sizeof(float) * N);
-    // Expliclity copy the inputs from the CPU to the GPU
-    cudaMemcpy(dValsPtr, vals.data(), sizeof(float) * N, cudaMemcpyHostToDevice);
-
     /*
      Set up a collection of reductions to evaluate for performance. 
      Each entry gives a technique's name, the kernel to call, and
@@ -264,9 +256,9 @@ int main()
     {
         {"Atomic Global", reduceAtomicGlobal, N},
         {"Atomic Shared", reduceAtomicShared, N},
-        {"Reduce Shared", reduceShared, N},
-        {"Reduce Shuffle", reduceShuffle, N},
-        {"Reduce Final", reduceFinal, N / 2 + 1}
+        {"Reduce Shared", reduceShared<BLOCK_SIZE>, N},
+        {"Reduce Shuffle", reduceShuffle<BLOCK_SIZE>, N},
+        {"Reduce Final", reduceFinal<BLOCK_SIZE>, N / 2 + 1}
     };
 
     // Evaluate each technique separately

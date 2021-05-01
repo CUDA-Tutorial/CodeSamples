@@ -1,4 +1,5 @@
 add_executable(08_Reductions
+	../../shared/include/generate_random.h
 	src/main.cu
 )
 
