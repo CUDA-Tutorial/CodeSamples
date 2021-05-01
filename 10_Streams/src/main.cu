@@ -14,6 +14,8 @@ __global__ void busy()
 	printf("I'm awake!\n");
 }
 
+constexpr unsigned int KERNEL_CALLS = 2;
+
 int main()
 {
 	std::cout << "==== Sample 08 - Streams ====\n" << std::endl;
@@ -28,8 +30,6 @@ int main()
 	 Finally, there should be two kernels running sequentially,
 	 followed by two kernels running in parallel.
 	*/
-
-	constexpr unsigned int KERNEL_CALLS = 2;
 
 	std::cout << "Running sequential launches" << std::endl;
 	// Launch the same kernel several times in a row
@@ -84,7 +84,7 @@ int main()
 			/*
 			 Make sure all kernels are submitted before synchronizing,
 			 because cudaStreamSynchronize goes into the default 0 stream:
-			 busy<1> -> sync<0>(1) -> busy<2> -> sync<0>(2)... serializes.
+			 busy<1> -> sync<0>(1) -> busy<2> -> sync<0>(2)... may serialize.
 			 busy<1> -> busy<2> -> sync<0>(1) -> sync<0>(2)... parallelizes.
 			*/
 			std::unique_lock<std::mutex> lock(mutex);

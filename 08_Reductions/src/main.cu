@@ -219,7 +219,7 @@ __global__ void reduceFinal(const float* __restrict input, int N)
 
 int main()
 {
-    std::cout << "==== Sample 07 - Reductions====\n" << std::endl;
+    std::cout << "==== Sample 07 - Reductions ====\n" << std::endl;
     /*
      Expected output: Accumulated results from CPU and GPU that 
      approach 42 * NUM_ITEMS (can vary greatly due to floating point 
