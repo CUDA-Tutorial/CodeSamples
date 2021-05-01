@@ -84,9 +84,12 @@ int main()
     of applications. The examples in this project cannot do them justice,
     for further use cases please consider the advanced NVIDIA Samples 
     that include detailed, elaborate applications.
+
+    Expected output:
+    1) Result of reduction, now computed with cooperative groups
     */
 
     ReduceWithGroups();
-
-	return 0;
+    
+    return 0;
 }
