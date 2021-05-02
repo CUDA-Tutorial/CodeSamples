@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
-#include "../../shared/include/generate_random.h"
+#include "../../shared/include/utility.h"
 
 // Shortening cooperative groups namespace for convenience
 namespace cg = cooperative_groups;
@@ -49,7 +49,7 @@ void ReduceWithGroups()
     // Generate some random numbers to reduce
     std::vector<float> vals;
     float* dValsPtr;
-    prepareRandomNumbersCPUGPU(N, vals, &dValsPtr);
+    samplesutil::prepareRandomNumbersCPUGPU(N, vals, &dValsPtr);
     // Prepare grid configuration for input and used reduction technique
     const dim3 blockDim = { BLOCK_SIZE, 1, 1 };
     const dim3 gridDim = { (N / 2 + BLOCK_SIZE) / BLOCK_SIZE, 1, 1 };
@@ -75,26 +75,11 @@ void ReduceWithGroups()
 __managed__ unsigned int mHappyNumSum;
 __managed__ unsigned int mHappyNumCount;
 
-__device__ bool isHappy(unsigned int num)
-{
-    while (num != 0 && num != 1 && num != 4)
-    {
-        unsigned int next_num = 0;
-        for (unsigned int n = num; n > 0; n /= 10)
-        {
-            unsigned int t = n % 10;
-            next_num += t * t;
-        }
-        num = next_num;
-    }
-    return num == 1;
-}
-
 __global__ void Sum10HappyNumbers(unsigned int N, unsigned int* mHappyNumbers)
 {
     unsigned int input = cg::this_grid().thread_rank() + 1;
 
-    bool happy = (input <= N) && isHappy(input);
+    bool happy = (input <= N) && samplesutil::isHappy(input);
 
     auto warp = cg::tiled_partition<32>(cg::this_thread_block());
     auto g = cg::binary_partition(warp, happy);
@@ -151,7 +136,6 @@ int main()
 
     //ReduceWithGroups();
 
-    //RejectionSamplePiWithGroups();
     HappyNummbersWithGroups(1000);
     
     return 0;

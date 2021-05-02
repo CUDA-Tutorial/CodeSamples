@@ -7,7 +7,7 @@
 #include <utility>
 #include <numeric>
 #include <iomanip>
-#include "../../shared/include/generate_random.h"
+#include "../../shared/include/utility.h"
 
 // Declare a GPU-visible floating point variable in global memory.
 __device__ float dResult;
@@ -240,7 +240,7 @@ int main()
     // Generate some random numbers to reduce
     std::vector<float> vals;
     float* dValsPtr;
-    prepareRandomNumbersCPUGPU(N, vals, &dValsPtr);
+    samplesutil::prepareRandomNumbersCPUGPU(N, vals, &dValsPtr);
 
     std::cout << "==== CPU Reduction ====\n" << std::endl;
     // A reference value is computed by sequential reduction

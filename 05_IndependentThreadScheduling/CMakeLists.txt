@@ -12,7 +12,7 @@ endforeach()
 if(${ITS_ARCH_FOUND})
 	add_executable(05_IndependentThreadScheduling
 		src/main.cu
-		../shared/include/test_scheduling.cuh
+		../shared/include/utility.h
 	)
 	target_include_directories(05_IndependentThreadScheduling PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 else()

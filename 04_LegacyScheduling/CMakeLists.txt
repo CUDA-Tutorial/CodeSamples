@@ -12,7 +12,7 @@ endforeach()
 if(${LEGACY_ARCH_FOUND})
 	add_executable(04_LegacyScheduling
 		src/main.cu
-		../shared/include/test_scheduling.cuh
+		../shared/include/utility.h
 	)
 	target_include_directories(04_LegacyScheduling PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 else()
