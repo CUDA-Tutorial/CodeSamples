@@ -34,6 +34,7 @@ int main()
      */
 
     constexpr int N = 128;
+    // Using a utility function for demonstration
     samplesutil::run2NestedBranchesForNSteps(N);
     return 0;
 }

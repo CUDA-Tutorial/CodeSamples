@@ -75,7 +75,7 @@ void ReduceWithGroups()
 __managed__ unsigned int mHappyNumSum;
 __managed__ unsigned int mHappyNumCount;
 
-__global__ void ComputeHappyNumbers(unsigned int start, unsigned int N, unsigned int* mHappyNumbers)
+__global__ void happyNumbersGroups(unsigned int start, unsigned int N, unsigned int* mHappyNumbers)
 {
     // Retrieve the input number based on the thread's global id
     unsigned int input = cg::this_grid().thread_rank() + start;
@@ -113,7 +113,7 @@ void HappyNummbersWithGroups(unsigned int start, unsigned int N)
     cudaMallocManaged((void**)&mHappyNumbers, sizeof(unsigned int) * N);
 
     // Compute count, sum and list of base 10 "happy numbers" from start to start+N
-    ComputeHappyNumbers<<<(N + 255) / 256, 256>>>(start, N, mHappyNumbers);
+    happyNumbersGroups<<<(N + 255) / 256, 256>>>(start, N, mHappyNumbers);
     cudaDeviceSynchronize();
 
     // Print the count, sum and list of happy numbers in the given range

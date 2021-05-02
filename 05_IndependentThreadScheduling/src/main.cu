@@ -1,6 +1,6 @@
 #include <cuda_runtime_api.h>
 #include <iostream>
-#include "../../shared/include/test_scheduling.cuh"
+#include "../../shared/include/utility.h"
 
 int main()
 {
@@ -36,6 +36,7 @@ int main()
      */
 
     constexpr int N = 128;
-    run2NestedBranchesForNSteps(N);
+    // Using a utility function for demonstration
+    samplesutil::run2NestedBranchesForNSteps(N);
     return 0;
 }
