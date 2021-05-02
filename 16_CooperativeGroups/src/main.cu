@@ -43,7 +43,7 @@ __global__ void reduceGroups(const float* __restrict input, int N)
 
 void ReduceWithGroups()
 {
-    constexpr unsigned int BLOCK_SIZE = 256, N = 100'000'000;
+    constexpr unsigned int BLOCK_SIZE = 256, N = 1'000'000;
 
     std::cout << "Producing random inputs...\n" << std::endl;
     // Generate some random numbers to reduce
@@ -62,7 +62,7 @@ void ReduceWithGroups()
     // Setting managed result variable
     mResult = 0;
     cudaEventRecord(start);
-    reduceGroups<BLOCK_SIZE> << <gridDim, blockDim >> > (dValsPtr, N);
+    reduceGroups<BLOCK_SIZE><<<gridDim, blockDim>>>(dValsPtr, N);
     cudaEventRecord(end);
 
     float ms;
@@ -70,6 +70,66 @@ void ReduceWithGroups()
     cudaEventSynchronize(end);
     cudaEventElapsedTime(&ms, start, end);
     std::cout << std::setw(20) << "Reduce Groups" << "\t" << ms << "ms \t" << mResult << std::endl;
+}
+
+__managed__ unsigned int mHappyNumSum;
+__managed__ unsigned int mHappyNumCount;
+
+__device__ bool isHappy(unsigned int num)
+{
+    while (num != 0 && num != 1 && num != 4)
+    {
+        unsigned int next_num = 0;
+        for (unsigned int n = num; n > 0; n /= 10)
+        {
+            unsigned int t = n % 10;
+            next_num += t * t;
+        }
+        num = next_num;
+    }
+    return num == 1;
+}
+
+__global__ void Sum10HappyNumbers(unsigned int N, unsigned int* mHappyNumbers)
+{
+    unsigned int input = cg::this_grid().thread_rank() + 1;
+
+    bool happy = (input <= N) && isHappy(input);
+
+    auto warp = cg::tiled_partition<32>(cg::this_thread_block());
+    auto g = cg::binary_partition(warp, happy);
+
+    if (happy)
+    {
+        unsigned int offset;
+        unsigned int partial_sum = cg::reduce(g, input, cg::plus<unsigned int>());
+        if (g.thread_rank() == 0)
+        {
+            atomicAdd(&mHappyNumSum, partial_sum);
+            offset = atomicAdd(&mHappyNumCount, g.size());
+        }
+        offset = g.shfl(offset, 0);
+        mHappyNumbers[offset + g.thread_rank()] = input;
+    }
+}
+
+void HappyNummbersWithGroups(unsigned int N)
+{
+    mHappyNumSum = 0;
+    mHappyNumCount = 0;
+    unsigned int* mHappyNumbers;
+    cudaMallocManaged((void**)&mHappyNumbers, sizeof(unsigned int) * N);
+
+    Sum10HappyNumbers<<<(N + 255) / 256, 256>>>(N, mHappyNumbers);
+    cudaDeviceSynchronize();
+
+    std::cout << "No. of happy numbers from 1 - " << N << ": " << mHappyNumCount << std::endl;
+    std::cout << "Sum of happy numbers from 1 - " << N << ": " << mHappyNumSum << std::endl;
+    std::cout << "\nList of happy numbers from 1 - " << N << ": ";
+
+    std::sort(mHappyNumbers, mHappyNumbers + mHappyNumCount);
+    for (int i = 0; i < mHappyNumCount; i++)
+        std::cout << mHappyNumbers[i] << ((i == mHappyNumCount - 1) ? "\n" : ", ");
 }
 
 int main()
@@ -89,7 +149,10 @@ int main()
     1) Result of reduction, now computed with cooperative groups
     */
 
-    ReduceWithGroups();
+    //ReduceWithGroups();
+
+    //RejectionSamplePiWithGroups();
+    HappyNummbersWithGroups(1000);
     
     return 0;
 }
