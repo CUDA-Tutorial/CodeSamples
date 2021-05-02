@@ -57,15 +57,28 @@ int main()
 	/*
 	If we know ahead of time where managed memory will be used
 	and performance is essential, we can prefetch it to the
-	required location. This basically replaces memcpy.
+	required location. This basically replaces memcpy. Note
+	however, that this action  requires support for the
+	concurrentAccess property. Support for concurrent access 
+	is queried via device properties.
 	*/
+
 	int device;
 	cudaGetDevice(&device);
-	cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), device);
+
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, device);
+	// Report support
+	std::cout << "\nCUDA device does " << (!prop.concurrentManagedAccess ? "NOT " : "") << "support concurrent access\n";
+
+	// If we can, we prefetch ahead of time
+	if(prop.concurrentManagedAccess)
+		cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), device);
 	// Launch kernel with managed memory pointer as parameter
 	PrintBar<<<1,1>>>(mBarPtr, VALUE);
 	// We may also prefetch it back to the CPU
-	cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), cudaCpuDeviceId);
+	if (prop.concurrentManagedAccess)
+		cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), cudaCpuDeviceId);
 	// Wait for GPU printing and prefetching to finish
 	cudaDeviceSynchronize();
 
@@ -77,16 +90,10 @@ int main()
 	Devices may or may not support concurrent access to variables.
 	If they don't, then the CPU must ensure that access to managed
 	memory does not overlap with GPU kernel execution, even if the
-	GPU does not use the managed memory in question. Support for
-	concurrent access is queried via device properties. Modifying
+	GPU does not use the managed memory in question. Modifying
 	a variable on the CPU before a kernel is fine, because the kernel
 	will only be launched if the CPU is done with prior instructions.
 	*/
-	cudaDeviceProp prop;
-	cudaGetDeviceProperties(&prop, device);
-
-	// Report support
-	std::cout << "\nCUDA device does " << (!prop.concurrentManagedAccess ? "NOT " : "") << "support concurrent access\n";
 
 	// Handling access to managed memory, depending on device properties
 	mFoo = 42;

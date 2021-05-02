@@ -21,4 +21,7 @@ add_subdirectory(12_ErrorHandling)
 add_subdirectory(13_MemoryFences)
 add_subdirectory(14_ManagedMemory)
 add_subdirectory(15_GraphAPI)
-add_subdirectory(16_CooperativeGroups)
+add_subdirectory(16_TensorCores)
+add_subdirectory(17_CooperativeGroups)
+add_subdirectory(18_StandardLibrary)
+
