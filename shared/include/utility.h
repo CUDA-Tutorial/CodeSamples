@@ -5,6 +5,7 @@
 #include <random>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <cuda_runtime_api.h>
 #include <mma.h>
 

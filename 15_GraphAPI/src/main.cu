@@ -86,7 +86,7 @@ cudaGraphExec_t buildGraphForParallelTasks(unsigned int numTasks)
 
 	// Create a node for each kernel in the graph, with grid config and parameters
 	std::vector<cudaGraphNode_t> nodes(numTasks);
-	cudaKernelNodeParams params = { busy, {1,1,1}, {1,1,1}, 0, nullptr, nullptr };
+	cudaKernelNodeParams params = { reinterpret_cast<void*>(busy), {1,1,1}, {1,1,1}, 0, nullptr, nullptr };
 
 	// Add them to the graph. This simple setup has no dependencies, passing nullptr
 	for (int i = 0; i < numTasks; i++)
