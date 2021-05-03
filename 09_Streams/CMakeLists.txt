@@ -1,4 +1,5 @@
 add_executable(09_Streams
+	../../shared/include/utility.h
 	src/main.cu
 )
 

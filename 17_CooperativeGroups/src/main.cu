@@ -129,7 +129,7 @@ void HappyNummbersWithGroups(unsigned int start, unsigned int N)
 
 int main()
 {
-    std::cout << "==== Sample 16 - Cooperative Groups ====\n" << std::endl;
+    std::cout << "==== Sample 17 - Cooperative Groups ====\n" << std::endl;
     /*
     Cooperative groups are very versatile. They can be created for entire
     grids, blocks, warps or opportunistically for converged threads. In

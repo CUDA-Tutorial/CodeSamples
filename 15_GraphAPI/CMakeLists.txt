@@ -1,4 +1,5 @@
 add_executable(15_GraphAPI
+	../../shared/include/utility.h
 	src/main.cu
 )
 

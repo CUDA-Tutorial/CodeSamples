@@ -1,11 +1,10 @@
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "../../shared/include/utility.h"
 
 __global__ void WriteSlow(int* out, int val)
 {
-    // Waste some time
-    const unsigned long long int start = clock64();
-    while ((clock64() - start) < 1'000'000'000ULL);
+    samplesutil::WasteTime(1'000'000'000ULL);
     // Finally write value
     *out = val;
 }

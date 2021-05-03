@@ -1,4 +1,5 @@
 add_executable(07_Synchronization
+	../../shared/include/utility.h
 	src/main.cu
 )
 

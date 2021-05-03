@@ -1,4 +1,5 @@
 add_executable(10_Events
+	../../shared/include/utility.h
 	src/main.cu
 )
 

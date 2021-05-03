@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include "../../shared/include/utility.h"
 
 __device__ int dVal = 42;
 __device__ int dOut;
@@ -11,8 +12,7 @@ __device__ int dOut;
 __global__ void CopyVal(const int* val)
 {
 	// Simulating a little work
-	const unsigned long long int start = clock64();
-	while ((clock64() - start) < 1'000'000ULL);
+	samplesutil::WasteTime(1'000'000ULL);
 	// Update a global value
 	dOut = *val;
 }

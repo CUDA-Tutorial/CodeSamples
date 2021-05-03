@@ -2,12 +2,12 @@
 #include <iostream>
 #include <vector>
 #include <cooperative_groups.h>
+#include "../../shared/include/utility.h"
 
 // A simple kernel function to keep threads busy for a while
 __global__ void busy()
 {
-	const unsigned long long int start = clock64();
-	while ((clock64() - start) < 1'000'000'000ULL);
+	samplesutil::WasteTime(1'000'000'000ULL);
 	printf("I'm awake!\n");
 }
 

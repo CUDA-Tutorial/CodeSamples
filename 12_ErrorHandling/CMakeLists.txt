@@ -1,4 +1,5 @@
 add_executable(12_ErrorHandling
+	../../shared/include/utility.h
 	src/main.cu
 )
 

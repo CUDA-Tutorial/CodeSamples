@@ -2,12 +2,12 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include "../../shared/include/utility.h"
 
 // A kernel that wastes some time
 __global__ void SlowKernel()
 {
-    const unsigned long long int start = clock64();
-    while ((clock64() - start) < 1'000'000'000ULL);
+    samplesutil::WasteTime(1'000'000'000ULL);
 }
 
 __device__ int dFoo;

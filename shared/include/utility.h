@@ -24,6 +24,13 @@ struct Matrix {
 
 namespace samplesutil
 {
+    // Helper function to let threads spin
+    __device__ void WasteTime(unsigned long long duration)
+    {
+        const unsigned long long int start = clock64();
+        while ((clock64() - start) < duration);
+    }
+
     // Get a matrix element
     template <typename F>
     __device__ float GetElement(const F* A, int row, int col, unsigned int DIM)
