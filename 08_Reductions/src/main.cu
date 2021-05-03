@@ -95,7 +95,7 @@ __global__ void reduceShared(const float* __restrict input, int N)
     Use a new strategy to handle superfluous threads.
     To make sure they stay alive and can help with
     the reduction, threads without an input simply
-    produce a '0', which as no effect on the result.
+    produce a '0', which has no effect on the result.
     */
     data[threadIdx.x] = (id < N ? input[id] : 0);
 

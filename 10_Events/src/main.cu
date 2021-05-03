@@ -70,7 +70,7 @@ int main()
     float msCPUSync = 1000.f * duration_cast<duration<float>>(afterSync - before).count();
     std::cout << "Measured time (chrono, sync): " << msCPUSync << "ms\n";
 
-    // Print measured GPU time - duration of GPU tasks only
+    // Print measured GPU time measured with CUDA events
     float msGPU;
     cudaEventElapsedTime(&msGPU, start, end);
     std::cout << "Measured time (CUDA events): " << msGPU << "ms\n";
@@ -80,12 +80,17 @@ int main()
     important when writing more complex projects: kernels are being 
     launched asynchronously. The launch returns immediately so the CPU
     can progress with other jobs. This means that to get a proper timing,
-    we always have to synchronize CPU and GPU before measuing current time
+    we always have to synchronize CPU and GPU before measuring current time
     with chrono. With CUDA events, we can insert them into streams before
     and after the actions we want to measure. We can have multiple events
     inserted at many different points. We still have to synchronize, but 
     only when we eventually want to ACCESS the measurements on the CPU 
     (e.g., once for all timings at the end of a frame to get a report).
+
+    Make sure that you don't try to measure parts of your program with 
+    events that mix GPU and CPU code. Events for start and end should 
+    only enclose code portions with GPU tasks. Otherwise you won't be 
+    sure what you are measuring and might get non-reproducible results!
     */
 
     //Clean up events

@@ -38,23 +38,22 @@ int main()
 {
 	/*
 	We use integers in this example. Float atomics are only part
-	of the standard in C++20. Soon!
+	of the standard in C++20. Should be widely available soon!
 	*/
-	constexpr int N = 1<<16;
+	constexpr int N = 1 << 16, CPUThreads = 4;
 
 	std::default_random_engine eng(42);
 	std::uniform_int_distribution<int> dist(10, 42);
 
 	int* mNumbers;
 	cudaMallocManaged((void**)&mNumbers, sizeof(int) * N);
-	for (int i = 0; i < N; i++)
-		mNumbers[i] = dist(eng);
+	std::for_each(mNumbers, mNumbers + N, [&dist, &eng](int& v) { v = dist(eng); });
 
 	cuda::std::atomic<int>* mResults;
 	cudaMallocManaged((void**)&mResults, 2 * sizeof(cuda::std::atomic<int>));
 	mResults[0] = mResults[1] = 0;
 
-	launchReductionCPU<4>(N, mNumbers, &mResults[0]);
+	launchReductionCPU<CPUThreads>(N, mNumbers, &mResults[0]);
 	launchReductionGPU<<<(N + 255) / 256, 256>>>(N, mNumbers, &mResults[1]);
 	cudaDeviceSynchronize();
 

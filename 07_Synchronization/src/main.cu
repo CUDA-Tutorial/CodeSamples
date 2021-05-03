@@ -94,7 +94,7 @@ int main()
     Block-wide synchronization with syncthreads:
 
     The following kernels compute an approximation of Pi.
-    The algorithm used is inherently sequential, therfore
+    The algorithm used is inherently sequential, therefore
     only one thread performs the communication and then 
     shares the result with all threads in the block. 
     However, while one thread is busy performing work, the

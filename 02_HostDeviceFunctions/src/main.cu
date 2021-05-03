@@ -28,7 +28,7 @@ __global__ void RunGPU(float x)
 
 /*
  Call host and portable functions from a kernel
- Note that, by default, if function has no architecture
+ Note that, by default, if a function has no architecture
  specified, it is assumed to be __host__ by NVCC.
 */
 void RunCPU(float x)

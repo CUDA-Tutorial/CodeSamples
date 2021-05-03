@@ -25,7 +25,7 @@ void runTasksSequentially(unsigned int numTasks)
 void runTasksWithStreams(unsigned int numTasks)
 {
 	/*
-	This stream-based function that can be directly captured with graph API.
+	This stream-based function can be directly captured with graph API.
 	Events are used to encode dependencies / start / end of capture.
 	*/
 	std::vector<cudaStream_t> streams(numTasks);
