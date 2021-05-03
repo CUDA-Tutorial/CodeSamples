@@ -6,8 +6,8 @@
 // A simple kernel function to keep threads busy for a while
 __global__ void busy()
 {
-	const long long int start = clock64();
-	while ((clock64() - start) < 1'000'000'000LL);
+	const unsigned long long int start = clock64();
+	while ((clock64() - start) < 1'000'000'000ULL);
 	printf("I'm awake!\n");
 }
 

@@ -11,9 +11,8 @@ __device__ int dOut;
 __global__ void CopyVal(const int* val)
 {
 	// Simulating a little work
-	const long long int start = clock64();
-	while ((clock64() - start) < 1'000'000LL);
-
+	const unsigned long long int start = clock64();
+	while ((clock64() - start) < 1'000'000ULL);
 	// Update a global value
 	dOut = *val;
 }

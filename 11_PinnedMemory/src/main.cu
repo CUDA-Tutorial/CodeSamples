@@ -8,8 +8,8 @@
 // Simulate a complex task, but actually only compute a square
 __global__ void PerformComplexTask(float input, float* __restrict result)
 {
-	const long long int start = clock64();
-	while ((clock64() - start) < 100'000'000LL);
+	const unsigned long long int start = clock64();
+	while ((clock64() - start) < 100'000'000ULL);
 	*result = input * input;
 }
 

@@ -6,8 +6,8 @@
 // A kernel that wastes some time
 __global__ void SlowKernel()
 {
-    const long long int start = clock64();
-    while ((clock64() - start) < 1'000'000'000LL);
+    const unsigned long long int start = clock64();
+    while ((clock64() - start) < 1'000'000'000ULL);
 }
 
 __device__ int dFoo;
