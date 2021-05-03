@@ -47,7 +47,11 @@ int main()
 		cudaStreamCreate(&s);
 		busy<<<1, 1, 0, s>>>();
 	}
-	// Destroy all streams (implicitly waits until each has finished)
+	/*
+	Destroy all streams. It is fine to do that immediately. Will not
+	implicitly synchonize, but the GPU will continue running their 
+	jobs until they have all been taken care of
+	*/
 	for (cudaStream_t& s : streams)
 		cudaStreamDestroy(s);
 	cudaDeviceSynchronize();
