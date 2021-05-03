@@ -3,6 +3,7 @@
 #include <vector>
 #include <iomanip>
 #include <random>
+#include <algorithm>
 #include <cuda/std/atomic>
 
 __host__ __device__ void reduceAtomic(int tId, int numThreads, int N, const int* input, cuda::std::atomic<int>* result)
