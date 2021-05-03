@@ -8,7 +8,6 @@ __global__ void SlowKernel()
 {
     const long long int start = clock64();
     while ((clock64() - start) < 1'000'000'000LL);
-
 }
 
 __device__ int dFoo;
@@ -32,8 +31,8 @@ int main()
      Using events to measure time and communicate across streams.
 
      Expected output: 
-     1) Longer duration measured with chrono, since it includes 
-     CPU-side work, which is not captured by CUDA events.
+     1) Unrealistically short time with chrono measurements without syncing, 
+     similar times for chrono with syncing and when using CUDA events.
      2) foo: 42
     */
     using namespace std::chrono_literals;
@@ -50,33 +49,44 @@ int main()
 
     // Record start directly before first relevant GPU command
     cudaEventRecord(start);
-    // Launch a light-weight GPU kernel
-    SetFoo<<<1,1>>>(1);
-    // Simulate some heavy CPU work
-    std::this_thread::sleep_for(2s);
-    // Launch another light-weight GPU kernel
+    // Launch a light-weight GPU kernel and heavy GPU kernel
     SetFoo<<<1,1>>>(0);
+    SlowKernel<<<1,1>>>();
     // Record end directly after last relevant GPU command
     cudaEventRecord(end);
-    /*
-    Synchronize, for two different reasons: first, to get 
-    an adequate time measurement on the CPU after the GPU
-    has finished running. Second, to make sure the end 
-    event has taken place when we call cudaEventElapsedTime
-    below. If we only needed to wait for the event, we 
-    could use cudaEventSynchronize instead.
-    */
-    cudaDeviceSynchronize();
-    auto after = std::chrono::system_clock::now();
+    // Also measure CPU time after last GPU command, without synching
+    auto afterNoSync = std::chrono::system_clock::now();
 
-    // Print measured CPU time - includes work done by the CPU inbetween
-    float msCPU = 1000.f * duration_cast<duration<float>>(after - before).count();
-    std::cout << "Measured time (chrono): " << msCPU << "ms\n";
-    
+    // Synchronize CPU and GPU
+    cudaDeviceSynchronize();
+    // Measure CPU time after last GPU command, with synching
+    auto afterSync = std::chrono::system_clock::now();
+
+    // Print measured CPU time without synchronization
+    float msCPUNoSync = 1000.f * duration_cast<duration<float>>(afterNoSync - before).count();
+    std::cout << "Measured time (chrono, no sync): " << msCPUNoSync << "ms\n";
+
+    // Print measured CPU time with synchronization
+    float msCPUSync = 1000.f * duration_cast<duration<float>>(afterSync - before).count();
+    std::cout << "Measured time (chrono, sync): " << msCPUSync << "ms\n";
+
     // Print measured GPU time - duration of GPU tasks only
     float msGPU;
     cudaEventElapsedTime(&msGPU, start, end);
     std::cout << "Measured time (CUDA events): " << msGPU << "ms\n";
+
+    /*
+    The difference between the two methods, CPU timing and events, is
+    important when writing more complex projects: kernels are being 
+    launched asynchronously. The launch returns immediately so the CPU
+    can progress with other jobs. This means that to get a proper timing,
+    we always have to synchronize CPU and GPU before measuing current time
+    with chrono. With CUDA events, we can insert them into streams before
+    and after the actions we want to measure. We can have multiple events
+    inserted at many different points. We still have to synchronize, but 
+    only when we eventually want to ACCESS the measurements on the CPU 
+    (e.g., once for all timings at the end of a frame to get a report).
+    */
 
     //Clean up events
     cudaEventDestroy(start);
