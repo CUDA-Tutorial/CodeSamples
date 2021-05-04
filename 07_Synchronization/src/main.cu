@@ -20,14 +20,7 @@ __global__ void ApproximatePi(bool synchronized)
     __shared__ float sPi;
     // Thread 0 computes Pi and stores it to shared memory
     if (threadIdx.x == 0)
-    {
-        // Use iterative Gregory–Leibniz series
-        float pi = 0.f, m = 1.f;
-        for (int n = 0; n < 100'000; n++, m*= -1.f)
-            pi += 4.f * (m / (2 * n + 1)); 
-        // Store computed approximation
-        sPi = pi;
-    }
+        sPi = samplesutil::GregoryLeibniz(100'000);
 
     // Boolean decides whether threads synchronize or not
     if (synchronized)
@@ -51,7 +44,7 @@ int main()
         Thread 64 thinks Pi = 0.000000
         Thread 96 thinks Pi = 0.000000
         Thread 0 thinks Pi = 3.141586
-        (or similar)
+        (or similar. Results may be correct, but not safe!)
 
         __syncthreads after computing a block-shared Pi:
         Thread 64 thinks Pi = 3.141586

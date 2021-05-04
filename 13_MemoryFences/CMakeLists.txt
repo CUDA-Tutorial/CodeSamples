@@ -1,4 +1,5 @@
 add_executable(13_MemoryFences
+	../../shared/include/utility.h
 	src/main.cu
 )
 

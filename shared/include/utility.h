@@ -31,6 +31,14 @@ namespace samplesutil
         while ((clock64() - start) < duration);
     }
 
+    __device__ float GregoryLeibniz(unsigned int iterations)
+    {
+        float pi = 0.f, m = 1.f;
+        for (int n = 0; n < iterations; n++, m *= -1.f)
+            pi += 4.f * (m / (2 * n + 1));
+        return pi;
+    }
+
     // Get a matrix element
     template <typename F>
     __device__ float GetElement(const F* A, int row, int col, unsigned int DIM)

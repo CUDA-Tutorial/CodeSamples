@@ -1,105 +1,173 @@
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "../../shared/include/utility.h"
 
-// Managed variables may be defined like device variables
-__managed__ unsigned int mFoo;
+/*
+ Producer function.
 
-// Print a managed variable
-__global__ void PrintFoo()
+ Following a threadfence (memory barrier) with a volatile yields a release pattern.
+ Following a threadfence (memory barrier) with an atomic yields a release pattern.
+ Note however, that neither of these options is ideal. For one, we combine two
+ operations to achieve a certain behavior. Second, threadfence is a general memory
+ barrier, and is thus stronger than it may have to be (e.g., release barrier only).
+ Volta+ actually have support for memory coherency models with proper acquire /
+ release semantics, which are exposed to the programmer via cuda::std::atomic in
+ libcu++.
+*/
+template <bool ATOMIC>
+__device__ void ProduceFoo(unsigned int id, float* dFooPtr, int *dFooReadyPtr)
 {
-	printf("mFoo GPU: %d\n", mFoo);
+	float pi = samplesutil::GregoryLeibniz(10'000'000);
+	dFooPtr[id] = pi;
+
+	__threadfence();
+
+	if (ATOMIC)
+		atomicExch(&dFooReadyPtr[id], 1);
+	else
+		*((volatile int*)&dFooReadyPtr[id]) = 1;
 }
 
-// Print a managed array of integers
-__global__ void PrintBar(const int* mBarPtr, unsigned int numEntries)
+/*
+ Consumer function.
+
+ Preceding a threadfence (memory barrier) with a volatile yields an acquire pattern.
+ Preceding a threadfence (memory barrier) with an atomic yields an acquire pattern.
+ Note however, that neither of these options is ideal. For one, we combine two 
+ operations to achieve a certain behavior. Second, threadfence is a general memory
+ barrier, and is thus stronger than it may have to be (e.g., acquire barrier only).
+ Volta+ actually have support for memory coherency models with proper acquire /
+ release semantics, which are exposed to the programmer via cuda::std::atomic in
+ libcu++.
+*/
+template <bool ATOMIC>
+__device__ void ConsumeFoo(unsigned int id, const float* dFooPtr, int* dFooReadyPtr)
 {
-	printf("mBar GPU: ");
-	for (int i = 0; i < numEntries; i++)
-		printf("%d%s", mBarPtr[i], (i == numEntries - 1) ? "\n" : ", ");
+	if (ATOMIC)
+		while (atomicAdd(&dFooReadyPtr[id], 0) == 0);
+	else
+		while (*((volatile int*)&dFooReadyPtr[id]) == 0);
+
+	__threadfence();
+
+	printf("Consumer %d thinks Pi is: %f\n", id, dFooPtr[id]);
+}
+
+// Launch either version of a safe producer / consumer scenarios
+template <unsigned int N, bool ATOMIC>
+__global__ void ProducerConsumer(float* dFooPtr, int* dFooReadyPtr)
+{
+	int id = (blockIdx.x * blockDim.x + threadIdx.x);
+
+	if (id < N)
+		ProduceFoo<ATOMIC>(id, dFooPtr, dFooReadyPtr);
+	else
+		ConsumeFoo<ATOMIC>(id - N, dFooPtr, dFooReadyPtr);
+}
+
+/*
+ As we have seen before, although we didnt explicilty mention it,
+ using a syncthreads inside a block is sufficient to make sure that
+ the other threads can observe the data that was previously written
+ by another thread in the block. Here we illustrate this again, 
+ with a simple, safe producer / consumer setup, where syncthreads
+ ensures ordering of operations and visibility of the data for all
+ threads in the block.
+*/
+__global__ void ProducerConsumerShared()
+{
+	extern __shared__ float sFoo[];
+
+	if (threadIdx.x < blockDim.x/2)
+	{
+		float pi = samplesutil::GregoryLeibniz(10'000'000);
+		sFoo[threadIdx.x] = pi;
+	}
+	// Synchronize threads in block AND ensure memory access ordering among them
+	__syncthreads();
+	if (threadIdx.x >= blockDim.x / 2)
+	{
+		int cId = threadIdx.x - blockDim.x / 2;
+		printf("Comsumer %d thinks Pi is %f\n", cId, sFoo[cId]);
+	}
 }
 
 int main()
 {
-	std::cout << "==== Sample 15 - Managed Memory ====\n" << std::endl;
-
+	std::cout << "==== Sample 13 - Memory Fences ====\n" << std::endl;
 	/*
-	Managed memory reduces code complexity by decoupling physical
-	memory location from address range. The CUDA runtime will take
-	care of moving the memory to the location where it is needed.
-	No copies are required, but care must be taken for concurrent
-	access. To avoid performance degradation, managed memory should
-	be prefetched.
-	
-	Expected output: 
-		mFoo GPU: 14
-		mBar GPU: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-		mBar CPU: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+	 So far, we have ignored the problem of memory fencing, which
+	 is relevant in multi-threaded applications. We can exchange 
+	 information securely via atomic variables, however when we store
+	 data in bulk or need to ensure a particular ordering of observed
+	 events, for instance in a producer/consumer scneario, we need clear 
+	 orderings of data accesses that are definite for all involved threads. 
+	 For threads within a block, this is trivially achieved by using 
+	 syncthreads. For establishing orderings across blocks, CUDA offers
+	 the __threadfence operation. 
+	 
+	 At its core, threadfence is a general memory barrier, which makes sure 
+	 that all writes below it occur after all writes above it, and that all 
+	 reads below it occur after all reads above it. However, there are some
+	 intricacies that make the safe use of threadfence a little tricky. 
+	 Understanding all possible scenarios is complex task, and may not be worth 
+	 the effort, since modern CUDA offers better alternatives (see material and 
+	 samples for CUDA standard library). A basic recipe for safely using
+	 __threadfence is as part of a release acquire pattern. The PTX ISA states
+	 that a __threadfence followed by an atomic or volatile memory operation,
+	 yields a release pattern, while a __threadfence preceding an atomic or
+	 volatile memory operation yields an acquire pattern. With these patterns,
+	 we can for instance solve the producer / consumer scenario by using flags
+	 that indicate when data is ready, and securing access to them with proper
+	 acquire / release behavior. 
 
-		CUDA device does (NOT) support concurrent access
-		mFoo GPU: 42
+	 Expected output: 
+
+		Producer / consumer pair in same block
+		Comsumer 15 thinks Pi is 3.141597
+		Comsumer 16 thinks Pi is 3.141597
+		Comsumer 0 thinks Pi is 3.141597
+		...
+		(or similar)
+
+		Producer / consumer pair with volatile + threadfence
+		Consumer 4 thinks Pi is: 3.141597
+		...
+		(or similar)
+
+		Producer / consumer pair with volatile + atomic
+		Consumer 4 thinks Pi is: 3.141597
+		...
+		(or similar)
 	*/
 
-	constexpr unsigned int VALUE = 14;
+	constexpr unsigned int N = 8;
+	constexpr unsigned int blockSize = 4;
+	
+	// Compute how many producer / consumer blocks should be launched
+	unsigned int numBlocks = N / blockSize;
 
-	// We may assign values to managed variables on the CPU
-	mFoo = VALUE;
-	// Managed variables can be used without explicit transfer
-	PrintFoo<<<1,1>>>();
-	// Wait for printf output
+	// Run producer / consumer scenario inside a single block (simple)
+	std::cout << "\nProducer / consumer pair in same block" << std::endl;
+	ProducerConsumerShared<<<1, 34, 34 * sizeof(float)>>>();
 	cudaDeviceSynchronize();
 
-	// We may also allocate managed memory on demand
-	int* mBarPtr;
-	cudaMallocManaged((void**)&mBarPtr, VALUE * sizeof(int));
-	// Managed memory can be directly initialized on the CPU
-	for (int i = 0; i < VALUE; i++)
-		mBarPtr[i] = i;
-	/*
-	If we know ahead of time where managed memory will be used
-	and performance is essential, we can prefetch it to the
-	required location. This basically replaces memcpy.
-	*/
-	int device;
-	cudaGetDevice(&device);
-	cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), device);
-	// Launch kernel with managed memory pointer as parameter
-	PrintBar<<<1,1>>>(mBarPtr, VALUE);
-	// We may also prefetch it back to the CPU
-	cudaMemPrefetchAsync(mBarPtr, VALUE * sizeof(int), cudaCpuDeviceId);
-	// Wait for GPU printing and prefetching to finish
+	// Allocate and initialize mmeory for global producer / consumer scenario
+	float* dFooPtr;
+	int* dFooReadyPtr;
+	cudaMalloc((void**)&dFooPtr, sizeof(float) * N);
+	cudaMalloc((void**)&dFooReadyPtr, sizeof(int) * N);
+	cudaMemset(dFooPtr, 0, sizeof(float) * N);
+	cudaMemset(dFooReadyPtr, 0, sizeof(int) * N);
+
+	// Producer / consumer scenario across blocks in global memory, using volatile + threadfence
+	std::cout << "\nProducer / consumer pair with volatile + threadfence" << std::endl;
+	ProducerConsumer<N, false><<<numBlocks * 2, blockSize>>>(dFooPtr, dFooReadyPtr);
 	cudaDeviceSynchronize();
 
-	std::cout << "mBar CPU: ";
-	for (int i = 0; i < VALUE; i++)
-		std::cout << mBarPtr[i] << (i == VALUE - 1 ? "\n" : ", ");
-
-	/*
-	Devices may or may not support concurrent access to variables.
-	If they don't, then the CPU must ensure that access to managed
-	memory does not overlap with GPU kernel execution, even if the
-	GPU does not use the managed memory in question. Support for
-	concurrent access is queried via device properties. Modifying
-	a variable on the CPU before a kernel is fine, because the kernel
-	will only be launched if the CPU is done with prior instructions.
-	*/
-	cudaDeviceProp prop;
-	cudaGetDeviceProperties(&prop, device);
-
-	// Report support
-	std::cout << "\nCUDA device does " << (!prop.concurrentManagedAccess ? "NOT " : "") << "support concurrent access\n";
-
-	// Handling access to managed memory, depending on device properties
-	mFoo = 42;
-	PrintFoo<<<1, 1>>>();
-
-	if (!prop.concurrentManagedAccess)
-		// CPU access to managed memory and GPU execution may not overlap
-		cudaDeviceSynchronize(); 
-	
-	// Modify on CPU after / during GPU execution
-	mBarPtr[0] = 20;
-
-	// Wait for results of printf
+	// Producer / consumer scenario across blocks in global memory, using atomic + threadfence
+	std::cout << "\nProducer / consumer pair with volatile + atomic" << std::endl;
+	ProducerConsumer<N, true><<<numBlocks * 2, blockSize>>>(dFooPtr, dFooReadyPtr);
 	cudaDeviceSynchronize();
 
 	return 0;
