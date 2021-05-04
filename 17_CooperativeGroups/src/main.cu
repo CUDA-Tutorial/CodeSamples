@@ -79,8 +79,8 @@ __global__ void happyNumbersGroups(unsigned int start, unsigned int N, unsigned 
 {
     // Retrieve the input number based on the thread's global id
     unsigned int input = cg::this_grid().thread_rank() + start;
-    // Compute whether or not a number is "happy" (utility function)
-    bool happy = (input <= N) && samplesutil::isHappy(input);
+    // Compute whether or not the input number is in range and "happy" (utility function)
+    bool happy = ((input-start) < N) && samplesutil::isHappy(input);
     // Create a group for the current warp
     auto warp = cg::tiled_partition<32>(cg::this_thread_block());
     // Create a child group to separate threads with happy and unhappy numbers
