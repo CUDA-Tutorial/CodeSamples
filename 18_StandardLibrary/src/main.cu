@@ -39,7 +39,6 @@ __global__ void completeReductionGPU(int N, const int* input, cuda::std::atomic<
 template<unsigned int NUM_THREADS>
 __host__ void completeReductionCPU(int N, int* mNumbers, cuda::std::atomic<int>* result)
 {
-	std::cout << "==== Sample 18 - Standard Library ====\n" << std::endl;
 	/*
 	 Simple multi-threaded launch for computing the reduction 
 	 in parallel. This function also makes sure to join on the
@@ -57,6 +56,7 @@ __host__ void completeReductionCPU(int N, int* mNumbers, cuda::std::atomic<int>*
 
 int main()
 {
+	std::cout << "==== Sample 18 - Standard Library ====\n" << std::endl;
 	/*
 	The libcu++ standard library allows us to make code more portable. 
 	Users can use familiar concepts from programming for the CPU and
