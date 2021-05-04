@@ -7,12 +7,12 @@
 #include <cuda/std/atomic>
 
 /*
-	Basic, architecture-agnostic reduction, using global atomics.
-	Uses portable cuda::std::atomics. Note that even though this code is portable,
-	it may not necessarily give the best performance. cuda::std::atomics have
-	system-wide (CPU + GPU) scope. If an algorithm is sure to run on the GPU, better
-	performance may be achieved using cuda::atomics, which take an additional parameter
-	"thread_scope" (e.g., "device" for global, "block" for shared memory atomics).
+ Basic, architecture-agnostic reduction, using global atomics.
+ Uses portable cuda::std::atomics. Note that even though this code is portable,
+ it may not necessarily give the best performance. cuda::std::atomics have
+ system-wide (CPU + GPU) scope. If an algorithm is sure to run on the GPU, better
+ performance may be achieved using cuda::atomics, which take an additional parameter
+ "thread_scope" (e.g., "device" for global, "block" for shared memory atomics).
 */
 __host__ __device__ void reduceAtomic(int tId, int numThreads, int N, const int* input, cuda::std::atomic<int>* result)
 {
