@@ -166,7 +166,7 @@ int main()
 	cudaDeviceSynchronize();
 
 	// Producer / consumer scenario across blocks in global memory, using atomic + threadfence
-	std::cout << "\nProducer / consumer pair with volatile + atomic" << std::endl;
+	std::cout << "\nProducer / consumer pair with atomic + threadfence" << std::endl;
 	ProducerConsumer<N, true><<<numBlocks * 2, blockSize>>>(dFooPtr, dFooReadyPtr);
 	cudaDeviceSynchronize();
 
