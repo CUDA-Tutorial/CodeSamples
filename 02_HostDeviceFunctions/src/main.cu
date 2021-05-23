@@ -53,3 +53,10 @@ int main()
     cudaDeviceSynchronize();
     return 0;
 }
+
+/*
+Exercises:
+1) Write a function that prints a message and can run on both the device and host
+2) Revise the function from 1, such that the CPU version use std::cout. Use the 
+__CUDA_ARCH__ macro to write code paths that contain architecture-specific code.
+*/

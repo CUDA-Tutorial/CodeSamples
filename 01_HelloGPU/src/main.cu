@@ -23,3 +23,10 @@ int main()
 	cudaDeviceSynchronize();
 	return 0;
 }
+
+/*
+Exercises:
+1) Change the message that is printed by the kernel
+2) Write a different kernel (different name, different message)
+3) Call the different kernels multiple times
+*/

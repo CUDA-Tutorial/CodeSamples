@@ -100,11 +100,15 @@ int main()
 	 is relevant in multi-threaded applications. We can exchange 
 	 information securely via atomic variables, however when we store
 	 data in bulk or need to ensure a particular ordering of observed
-	 events, for instance in a producer/consumer scneario, we need clear 
+	 events, for instance in a producer/consumer scenario, we need clear 
 	 orderings of data accesses that are definite for all involved threads. 
 	 For threads within a block, this is trivially achieved by using 
 	 syncthreads. For establishing orderings across blocks, CUDA offers
-	 the __threadfence operation. 
+	 the __threadfence operation. This can be necessary, because the default 
+	 atomicXXX operations of CUDA only give us "RELAXED" semantics, i.e., 
+	 they have no synchronization effect on other memory. However, combining
+	 a thread fence with relaxed atomics can---much like in C++11---give us 
+	 acquire / release semantics. 
 	 
 	 At its core, threadfence is a general memory barrier, which makes sure 
 	 that all writes below it occur after all writes above it, and that all 
@@ -113,8 +117,8 @@ int main()
 	 Understanding all possible scenarios is complex task, and may not be worth 
 	 the effort, since modern CUDA offers better alternatives (see material and 
 	 samples for CUDA standard library). A basic recipe for safely using
-	 __threadfence is as part of a release acquire pattern. The PTX ISA states
-	 that a __threadfence followed by an atomic or volatile memory operation,
+	 __threadfence is as part of a release-acquire pattern. The PTX ISA states
+	 that a __threadfence, followed by an atomic or volatile memory operation,
 	 yields a release pattern, while a __threadfence preceding an atomic or
 	 volatile memory operation yields an acquire pattern. With these patterns,
 	 we can for instance solve the producer / consumer scenario by using flags

@@ -36,3 +36,11 @@ int main()
 
     return 0;
 }
+
+/*
+Exercises:
+1) Launch a 1D grid with 2D blocks (e.g., 4 x (4 x 4))
+2) Launch a 2D grid with 2D blocks (e.g., (4 x 4) x (4 x 4))
+3) Launch a grid where either the grid or block are 3D
+4) Can you find out what the limits are to how many blocks/threads you can launch?
+*/

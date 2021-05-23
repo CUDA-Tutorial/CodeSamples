@@ -40,3 +40,10 @@ int main()
 
 	return 0;
 }
+
+/*
+Exercises:
+1) Change the behavior such that the properties are not just printed for one, but all available CUDA devices you have!
+(Even if you have just one)
+2) Print a few more interesting properties and read up in the specification what they mean.
+*/

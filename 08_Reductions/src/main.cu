@@ -15,6 +15,11 @@ __device__ float dResult;
 /*
  The most basic reduction kernel uses atomic operations to accumulate
  the individual inputs in a single, device-wide visible variable.
+ If you have experience with atomics, it is important to note that the
+ basic atomicXXX instructions of CUDA have RELAXED semantics (scary!).
+ That means, the threads that operate atomically on them only agree that 
+ there is a particular order for the accesses to that variable and nothing
+ else (especially no acquire/release semantics).
 */
 __global__ void reduceAtomicGlobal(const float* __restrict input, int N)
 {
@@ -298,3 +303,10 @@ int main()
     cudaFree(dValsPtr);
     return 0;
 }
+
+/*
+Exercises: 
+1) Do you have any other ideas how the reduction could be improved?
+Making it even faster should be quite challenging, but if you have 
+some suggestions, try them out and see how they affect performance! 
+*/

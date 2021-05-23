@@ -124,3 +124,20 @@ int main()
 
     return 0;
 }
+
+/*
+Exercises:
+1) Write a function that takes data from constant memory and writes it to global. 
+Copy it back from the GPU and print on the CPU.
+2) Combine allocation, memcpy and several kernels in succession to produce a
+more complex result. E.g., kernel A adds global values X + Y and writes the
+result back to global, kernel B multiplies that result by Z. Convince yourself 
+that the results remain in global memory between kernel launches and that a
+kernel or a memcpy that runs after an earlier kernel can safely access the global
+data that it produced, even if you don't use cudaDeviceSynchronize inbetween.
+3) Try to write a kernel where one thread writes a value to shared memory without 
+a syncwarp, so that other threads may fail to see it. You might need a block 
+size larger than 32 threads for this to happen and you may have to let the writing 
+thread do some "fake" work to delay its write to shared memory. Or it may work
+immediately :) A solution should be provided by the following code sample.
+*/
