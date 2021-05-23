@@ -26,7 +26,7 @@ __host__ __device__ void reduceAtomic(int tId, int numThreads, int N, const int*
 
 	// For each value in the assigned portion, atomically add it to accumulated sum.
 	for (int i = myStart; i < myEnd; i++)
-		*result += input[i];
+		result->fetch_add(input[i], cuda::std::memory_order_relaxed);
 }
 
 __global__ void completeReductionGPU(int N, const int* input, cuda::std::atomic<int>* result)
