@@ -109,3 +109,18 @@ int main()
 
     return 0;
 }
+
+/*
+Exercises:
+1) Try launching a simple CUDA kernel 1000-10000 times in a loop, once
+with cudaDeviceSynchronize after each launch, once without it. 
+What's the effect on runtime? Does anything change about the program behavior?
+2) You can also memcpy from device to device. Perform a few of them (e.g. moving a
+value from device location A to device location B to C) and then back to CPU and
+confirm that everything happened properly in order.
+3) Try running a kernel where the first 16 threads in each warp take one branch,
+the other 16 take the other, with a syncthreads in each branch. What happens?
+Why? Document what happens when the first 32 threads in a block of size 64 take 
+one branch, the other 32 the other, with a syncthreads in each branch. What happens 
+now? Provide your best guess why.
+*/

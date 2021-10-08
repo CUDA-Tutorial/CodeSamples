@@ -168,3 +168,13 @@ int main()
     cublasDestroy(handle);
     return 0;
 }
+
+/*
+Exercises:
+1) Change the tensor matrix multiplication method to work with a different
+input data type and adapt input generation accordingly
+2) Change the tensor matrix multiplication method to work with a different
+output data type and adapt input generation accordingly
+3) Change the application to work with ANY matrix size, i.e., one that is
+NOT a multiple of 16. You may want to start with a very small size for this.
+*/

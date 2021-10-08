@@ -121,3 +121,14 @@ int main()
 	// For any kind of error, CUDA also provides a more verbose description.
 	std::cout << cudaGetErrorName(cudaErrorInvalidPc) << ": " << cudaGetErrorString(cudaErrorInvalidPc) << std::endl;
 }
+
+/*
+Exercises:
+1) Write a program that creates many pinned large allocations, and stop when 
+the first error occurs. What is this error? When and why does it occur?
+2) cudaMemcpy can implicitly synchronize the GPU and CPU, hence its return values
+can be used to find any errors of kernels that were launched before it. Demonstrate
+this for a simple example where a kernel does something illegal that you discover
+using cudaMemcpy.
+3) Try to produce an exotic error that does not occur already occur in this program
+*/

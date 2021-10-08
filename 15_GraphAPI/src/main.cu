@@ -150,3 +150,13 @@ int main()
 
 	return 0;
 }
+
+/*
+Exercises:
+1) Manually build and instantiate a working CUDA graph that includes a host-side 
+function node and demonstrate what it does.
+2) Manually build and instantiate a working graph that includes a different kind 
+of node that does not yet occur in this application or in exercise 1).
+3) Given a particular CUDA graph, create a simple GraphViz graph of its structure.
+Use it to sketch out the graphs created by this source code. 
+*/
