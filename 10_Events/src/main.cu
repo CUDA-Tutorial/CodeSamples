@@ -148,3 +148,10 @@ int main()
  
     return 0;
 }
+
+/*
+Exercises:
+1) Write a simple function that calls several different kernels, each of which
+should do a bit of work. Use multiple events and just one cuda...Synchronize,
+and report in % how much each kernel contributes to the total procedure run time. 
+*/

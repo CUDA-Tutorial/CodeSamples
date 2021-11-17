@@ -308,7 +308,9 @@ int main()
 
 /*
 Exercises: 
-1) Do you have any other ideas how the reduction could be improved?
+1) Change the program so that the methods reduce integer values instead of float. 
+Can you observe any difference in terms of speed / computed results?
+2) Do you have any other ideas how the reduction could be improved?
 Making it even faster should be quite challenging, but if you have 
 some suggestions, try them out and see how they affect performance! 
 */

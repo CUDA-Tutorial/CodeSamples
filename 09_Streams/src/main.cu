@@ -130,3 +130,10 @@ int main()
 
 	return 0;
 }
+
+/*
+Exercises:
+1) Streams are a great way to bring task parallelism to the GPU. Think of a small
+program that can benefit from running two different kernels at the same time and
+write it, along with documentation of its inputs/outputs and usefulness.
+*/

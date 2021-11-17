@@ -176,3 +176,13 @@ int main()
 
 	return 0;
 }
+
+/*
+Exercises:
+1) TRY to write a program where one thread reliably observes writes in the WRONG
+order, due to lack of threadfence (e.g., in your code one thread sets A from 0 
+to 1, followed by setting B from 0 to 1, but another thread observes A = 0, B = 1,
+or something similar). To do this, you may want to make sure those threads run in 
+different blocks, preferably even on different SMs, and communicate via global 
+memory, try atomics and volatiles. If you can't manage, document your best attempt. 
+*/

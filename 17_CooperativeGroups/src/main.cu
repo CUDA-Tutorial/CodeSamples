@@ -155,3 +155,21 @@ int main()
     
     return 0;
 }
+
+/*
+Exercises:
+1) Write a kernel where each thread first computes its ID in a register.
+Within each group of 4 consecutive threads, threads should then share their 
+ID with all others, using shuffling. Write this kernel once with, once without
+cooperative groups, and confirm correctness via output.
+2) Launch a COOPERATIVE KERNEL and use grid-wide synchronization to make sure 
+all threads in the entire grid are at the same point in the program. Can you
+think of any use cases for this?
+3) Write a simple program with the following tasks A, B, C, each with N threads. 
+In A, each thread t should compute and store t*t in its output A_out[t]. In B, 
+each thread t should compute A_out[N - t - 1] - t and store it in its output 
+B_out[t]. In C, each thread t should compute B_out[N - t - 1] + 4 and store it 
+in its output C_out[t]. Implement this once using one kernel for each task A, 
+and once with a single kernel that uses grid synchronization between tasks.
+In the single kernel, do you need additional threadfences and/or volatiles?
+*/

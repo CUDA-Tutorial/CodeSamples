@@ -105,3 +105,15 @@ int main()
 	cudaFree(mNumbers);
 	cudaFree(mResults);
 }
+
+/*
+Exercises:
+1) The CUDA standard library is continuously being expanded. Check out
+their documentation and use an include for one of the recent features
+and demonstrate it.
+2) Write a simple kernel with a single block that frequently updates a
+single cuda::atomic variable. For performance reasons, it should be one with
+thread_scope "block".
+3) Try to show that there is a performance difference in 2) between using
+the default cuda::std::atomic and the cuda::atomic with thread_scope block.
+*/

@@ -111,3 +111,11 @@ int main()
 
 	return 0;
 }
+
+/*
+Exercises:
+1) Write a program computes the squares of the integers from 1 to 1000 and 
+stores them to managed memory. Print them on the CPU.
+2) Choose one of the programs you used previously that did quite a bit of copying,
+and rewrite it here to use managed memory instead. How does the performance compare?
+*/

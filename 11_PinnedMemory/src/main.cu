@@ -45,11 +45,6 @@ int main()
 	Expected output: slow performance for all combinations that are not
 	pinned memory and asynchronous copy, due to implicit synchronization
 	preventing concurrent execution of kernels.
-
-	You may also try to make the streams non-blocking! In this case, you
-	can expect wrong results for cudaMemcpy: the default stream won't
-	wait for the custom streams running the kernels to finish before it
-	starts copying.
 	*/
 
 	constexpr unsigned int TASKS = 4;
@@ -110,7 +105,7 @@ int main()
 				cudaStreamSynchronize(streams[i]);
 
 				// Evaluate result and print
-				if (results[i] != (i + 1) * (i + 1))
+				if (dst[i] != (i + 1) * (i + 1))
 					std::cout << "Task failed or CPU received wrong value!" << std::endl;
 				else
 					std::cout << "Finished task " << i << ", produced output: " << results[i] << std::endl;
@@ -128,3 +123,19 @@ int main()
 	// Pinned memory should be freed with cudaFreeHost
 	cudaFreeHost(results_pinned);
 }
+
+/*
+Exercises:
+1) Create a sketch of this experiment to illustrate what is happening. 
+For each of the configurations, try to establish the timeline of what happens on
+CPU/GPU and why you get the results you do. If you can, feel free to use NVIDIA
+Nsight Systems, which should make this very easy.
+2) Write a simple program that just compares the performance of copying pinned vs
+non-pinned back and forth with cudaMemcpy in a single stream a couple of times.
+How does the performance difference develop as you change the size of the copy?
+3) Try to make the streams non-blocking using 
+cudaCreateStreamWithFlags(..., cudaStreamNonBlocking)! In this case, you
+can expect wrong results for cudaMemcpy: Non-blocking means the default
+stream won't wait for the custom streams running the kernels to finish
+before it starts copying. Can you draw a sketch of what is going wrong?
+*/
