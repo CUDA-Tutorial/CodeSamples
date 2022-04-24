@@ -61,7 +61,7 @@ int main()
     In this sample, we demonstrate the very common application of 
     matrix-matrix multiplication. To illustrate the benefits of
     tensor cores, we run it in four different ways:
-    1) Using tiling and shared memory (CUDA Progrraming Guide)
+    1) Using tiling and shared memory (CUDA Programming Guide)
     2) Using tiling and tensor cores
     3) Using CUBLAS without tensor cores
     4) Using CUBLAS with tensor cores
@@ -73,7 +73,11 @@ int main()
     */
 
     constexpr unsigned int DIM = 4096;
-    std::cout << "Multiplying two " << DIM << " x " << DIM << " matrices on GPU\n" << std::endl;
+    std::cout << "Timing " << DIM << " x " << DIM << " matrix-matrix multiplication on GPU with 4 different methods:" << std::endl;
+    std::cout << "1) Reference (CUDA Programming Guide)" << std::endl;
+    std::cout << "2) Tensor cores (naive)" << std::endl;
+    std::cout << "3) Pedantic (CUBLAS)" << std::endl;
+    std::cout << "4) Tensor cores (CUBLAS)\n" << std::endl;
 
     // To use CUBLAS functions, we initiate a handle once
     cublasHandle_t handle;
@@ -114,7 +118,7 @@ int main()
      Tensor Cores, and two CUBLAS methods, one with Tensor Cores diabled,
      the other enabled. 
     */
-    enum class METHOD { REF, TENSOR, CUBLAS_NO_TENSOR, CUBLAS};
+    enum class METHOD { REF = 1, TENSOR = 2, CUBLAS_NO_TENSOR = 3, CUBLAS = 4};
     for (METHOD m : {METHOD::REF, METHOD::TENSOR, METHOD::CUBLAS_NO_TENSOR, METHOD::CUBLAS})
     {
         // Initiatlize the output matrix
@@ -162,7 +166,7 @@ int main()
         // Synchronize and report run time of each individual technique
         float ms;
         cudaEventElapsedTime(&ms, start, end);
-        std::cout << ms << "ms\n" << std::endl;
+        std::cout << (int)m << ") " <<  ms << "ms" << std::endl;
     }
     // Destroy acquired CUBLAS handle
     cublasDestroy(handle);
