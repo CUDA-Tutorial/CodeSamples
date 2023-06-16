@@ -206,15 +206,19 @@ namespace samplesutil
     // scheduler. 
     static __device__ void takeNTurns(const char* who, unsigned int N)
     {
-        unsigned int lastTurn = 0, turn, start;
+        int lastTurn = -42, turn, start;
         for (int i = 0; i < N; i++)
         {
             turn = atomicInc(&step, 0xFFFFFFFFU);
-            if (lastTurn != (turn-1))
-                start = turn;
 
-            if ((i == N - 1) || ((i > 0) && (start == turn)))
-                printf("%s: %d--%d\n", who, start, turn);
+            bool switchOccurred = (lastTurn != (turn - 1));
+            bool done = (i == (N - 1));
+
+            if (done || ((i > 0) && switchOccurred))
+                printf("%s: %d--%d\n", who, start, lastTurn + (done ? 1 : 0));
+
+            if (switchOccurred)
+                start = turn;
 
             lastTurn = turn;
         }
