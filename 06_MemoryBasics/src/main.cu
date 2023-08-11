@@ -3,7 +3,7 @@
 
 
 // Declaration of a device variable in constant memory
-__device__ __constant__ int cFoo;
+__constant__ int cFoo;
 
 __global__ void ReadConstantMemory()
 {
