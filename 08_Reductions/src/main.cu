@@ -201,8 +201,8 @@ __global__ void reduceFinal(const float* __restrict input, int N)
 
     __shared__ float data[BLOCK_SIZE];
     // Already combine two values upon load from global memory.
-    data[threadIdx.x] = id < N / 2 ? input[id] : 0;
-    data[threadIdx.x] += id + N/2 < N ? input[id + N / 2] : 0;
+    data[threadIdx.x] = id < N ? input[id] : 0;
+    data[threadIdx.x] += (id + N < 2*N) ? input[id + N] : 0;
 
     for (int s = blockDim.x / 2; s > 16; s /= 2)
     {

@@ -23,14 +23,14 @@ __global__ void WriteGlobalMemory(int* __restrict dOutPtr)
     *dOutPtr = dFoo * dFoo;
 }
 
-__device__ void WriteAndPrintSharedMemory(int* sFoo)
+__device__ void WriteAndPrintSharedMemory(int* __restrict sFoo)
 {
     // Write a computed result to shared memory for other threads to see
     sFoo[threadIdx.x] = 42 * (threadIdx.x + 1);
     // We make sure that no thread prints while the other still writes (parallelism!)
     __syncwarp();
     // Print own computed result and result by neighbor
-    printf("ThreadID: %d, sFoo[0]: %d, sFoo[1]: %d\n", threadIdx.x, sFoo[0], sFoo[1]);
+    printf("ThreadID: %d, sFoo[%d]: %d \n", threadIdx.x, threadIdx.x, sFoo[threadIdx.x]);
 }
 
 __global__ void WriteAndPrintSharedMemoryFixed()
@@ -73,7 +73,7 @@ int main()
      GPU memory. Can be updated with cudaMemcpyToSymbol.
      This syntax is unusual, but this is how it should be
     */
-    cudaMemcpyToSymbol(cFoo, &bar, sizeof(int));
+    cudaMemcpyToSymbol(&cFoo, &bar, sizeof(int));
     ReadConstantMemory<<<1, 1>>>();
     cudaDeviceSynchronize();
 
